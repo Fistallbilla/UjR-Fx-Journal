@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
 
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
+    <meta name="theme-color" content="#080c11">
+
     <title>UjR Fx Journal</title>
 
-    <!-- Favicon -->
     <link rel="icon"
           type="image/png"
           href="./logo.png">
@@ -18,78 +17,75 @@
     <link rel="apple-touch-icon"
           href="./logo.png">
 
-    <!-- PWA -->
     <link rel="manifest"
           href="./manifest.json">
 
-    <meta name="theme-color"
-          content="#0f1115">
-
-    <!-- CSS -->
     <link rel="stylesheet"
-          href="style.css">
-
+          href="./style.css">
 </head>
-
 
 <body>
 
-
 <!-- =====================================================
-     LOGIN SCREEN
+     LOGIN
 ===================================================== -->
 
-<div id="loginScreen"
-     class="login-screen">
+<div id="loginScreen" class="login-screen">
 
     <div class="login-card">
 
+        <div class="brand-logo">
+            <img src="./logo.png" alt="UjR Fx">
+        </div>
+
         <h1>UjR Fx Journal</h1>
 
-        <p>
-            Trading Performance Tracker
+        <p class="login-subtitle">
+            Your personal trading performance dashboard
         </p>
 
         <button id="googleLoginBtn"
                 class="google-btn">
 
+            <span>G</span>
             Continue with Google
 
         </button>
+
+        <p class="login-note">
+            Your trades are securely stored in your account.
+        </p>
 
     </div>
 
 </div>
 
 
-
 <!-- =====================================================
      MAIN APP
 ===================================================== -->
 
-<div id="app"
-     style="display:none;">
-
+<div id="app" style="display:none;">
 
     <!-- HEADER -->
 
     <header class="header">
 
-        <div>
+        <div class="brand">
 
-            <h1>UjR Fx Journal</h1>
+            <img src="./logo.png"
+                 class="header-logo"
+                 alt="UjR Fx">
 
-            <p>
-                Trading Performance Tracker
-            </p>
+            <div>
+                <h1>UjR Fx Journal</h1>
+                <p>Trading Performance Tracker</p>
+            </div>
 
         </div>
 
 
         <div class="header-right">
-
-
-            <!-- USER -->
 
             <div class="user-box">
 
@@ -98,24 +94,56 @@
                      src=""
                      alt="User">
 
-                <span id="userName">
-                    Trader
-                </span>
+                <div>
+                    <strong id="userName">
+                        Trader
+                    </strong>
+
+                    <small>
+                        Logged in
+                    </small>
+                </div>
 
             </div>
 
 
-            <!-- LOGOUT -->
-
             <button id="logoutBtn"
                     class="logout-btn">
-
                 Logout
-
             </button>
 
+        </div>
 
-            <!-- ADD TRADE -->
+    </header>
+
+
+    <!-- MAIN -->
+
+    <main class="container">
+
+
+        <!-- =================================================
+             WELCOME
+        ================================================== -->
+
+        <section class="welcome-section">
+
+            <div>
+
+                <span class="small-label">
+                    TRADING JOURNAL
+                </span>
+
+                <h2>
+                    Track. Review. Improve.
+                </h2>
+
+                <p>
+                    Keep every trade organized and understand
+                    your real trading performance.
+                </p>
+
+            </div>
 
             <button class="primary-btn"
                     onclick="scrollToTrade()">
@@ -124,97 +152,168 @@
 
             </button>
 
-        </div>
+        </section>
 
-    </header>
-
-
-
-    <main class="container">
 
 
         <!-- =================================================
              DASHBOARD
-        ================================================= -->
+        ================================================== -->
 
         <section>
 
-            <h2>Dashboard</h2>
+            <div class="section-title">
+
+                <div>
+                    <span class="small-label">
+                        OVERVIEW
+                    </span>
+
+                    <h2>Dashboard</h2>
+                </div>
+
+                <button class="secondary-btn"
+                        onclick="exportCSV()">
+
+                    ↓ Export CSV
+
+                </button>
+
+            </div>
 
 
             <div class="dashboard-grid">
 
 
-                <div class="card">
+                <div class="stat-card">
 
-                    <span>
-                        Total Trades
-                    </span>
+                    <div class="stat-icon">
+                        📊
+                    </div>
 
-                    <strong id="totalTrades">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="card">
-
-                    <span>
-                        Win Rate
-                    </span>
-
-                    <strong id="winRate">
-                        0%
-                    </strong>
+                    <div>
+                        <span>Total Trades</span>
+                        <strong id="totalTrades">0</strong>
+                    </div>
 
                 </div>
 
 
-                <div class="card">
+                <div class="stat-card">
 
-                    <span>
-                        Wins
-                    </span>
+                    <div class="stat-icon">
+                        🎯
+                    </div>
 
-                    <strong class="green"
-                            id="wins">
-
-                        0
-
-                    </strong>
+                    <div>
+                        <span>Win Rate</span>
+                        <strong id="winRate">0%</strong>
+                    </div>
 
                 </div>
 
 
-                <div class="card">
+                <div class="stat-card">
 
-                    <span>
-                        Losses
-                    </span>
+                    <div class="stat-icon">
+                        🟢
+                    </div>
 
-                    <strong class="red"
-                            id="losses">
+                    <div>
+                        <span>Wins</span>
+                        <strong class="green"
+                                id="wins">
+                            0
+                        </strong>
+                    </div>
 
-                        0
+                </div>
 
-                    </strong>
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        🔴
+                    </div>
+
+                    <div>
+                        <span>Losses</span>
+                        <strong class="red"
+                                id="losses">
+                            0
+                        </strong>
+                    </div>
 
                 </div>
 
 
-                <div class="card">
+                <div class="stat-card">
 
-                    <span>
-                        Total P/L
-                    </span>
+                    <div class="stat-icon">
+                        💰
+                    </div>
 
-                    <strong id="totalPL">
-                        0.00
-                    </strong>
+                    <div>
+                        <span>Total P/L</span>
+                        <strong id="totalPL">
+                            0.00
+                        </strong>
+                    </div>
 
                 </div>
 
+
+                <div class="stat-card">
+
+                    <div class="stat-icon">
+                        ⚖️
+                    </div>
+
+                    <div>
+                        <span>Average P/L</span>
+                        <strong id="averagePL">
+                            0.00
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =================================================
+             PERFORMANCE
+        ================================================== -->
+
+        <section class="analytics-section">
+
+            <div class="section-title">
+
+                <div>
+                    <span class="small-label">
+                        PERFORMANCE
+                    </span>
+
+                    <h2>Equity Curve</h2>
+                </div>
+
+            </div>
+
+
+            <div class="chart-card">
+
+                <canvas id="equityChart"></canvas>
+
+                <div id="emptyChart"
+                     class="empty-chart">
+
+                    Add some trades to see your
+                    performance curve.
+
+                </div>
 
             </div>
 
@@ -224,13 +323,22 @@
 
         <!-- =================================================
              ADD TRADE
-        ================================================= -->
+        ================================================== -->
 
         <section id="tradeSection"
                  class="form-section">
 
+            <div class="section-title">
 
-            <h2>Add Trade</h2>
+                <div>
+                    <span class="small-label">
+                        JOURNAL
+                    </span>
+
+                    <h2>Add Trade</h2>
+                </div>
+
+            </div>
 
 
             <form id="tradeForm">
@@ -239,46 +347,32 @@
                 <div class="form-grid">
 
 
-                    <!-- DATE -->
-
                     <div class="input-group">
 
-                        <label>
-                            Date
-                        </label>
+                        <label>Date</label>
 
-                        <input
-                            type="date"
-                            id="date"
-                            required>
+                        <input type="date"
+                               id="date"
+                               required>
 
                     </div>
 
 
-                    <!-- PAIR -->
-
                     <div class="input-group">
 
-                        <label>
-                            Pair
-                        </label>
+                        <label>Pair</label>
 
-                        <input
-                            type="text"
-                            id="pair"
-                            value="XAUUSD"
-                            required>
+                        <input type="text"
+                               id="pair"
+                               value="XAUUSD"
+                               required>
 
                     </div>
 
 
-                    <!-- DIRECTION -->
-
                     <div class="input-group">
 
-                        <label>
-                            Direction
-                        </label>
+                        <label>Direction</label>
 
                         <select id="direction">
 
@@ -295,92 +389,77 @@
                     </div>
 
 
-                    <!-- ENTRY -->
-
                     <div class="input-group">
 
-                        <label>
-                            Entry
-                        </label>
+                        <label>Entry</label>
 
-                        <input
-                            type="number"
-                            id="entry"
-                            step="any"
-                            required>
+                        <input type="number"
+                               id="entry"
+                               step="any"
+                               required>
 
                     </div>
 
 
-                    <!-- SL -->
-
                     <div class="input-group">
 
-                        <label>
-                            Stop Loss
-                        </label>
+                        <label>Stop Loss</label>
 
-                        <input
-                            type="number"
-                            id="sl"
-                            step="any"
-                            required>
+                        <input type="number"
+                               id="sl"
+                               step="any"
+                               required>
 
                     </div>
 
 
-                    <!-- TP -->
-
                     <div class="input-group">
 
-                        <label>
-                            Take Profit
-                        </label>
+                        <label>Take Profit</label>
 
-                        <input
-                            type="number"
-                            id="tp"
-                            step="any"
-                            required>
+                        <input type="number"
+                               id="tp"
+                               step="any"
+                               required>
 
                     </div>
 
 
-                    <!-- SETUP -->
-
                     <div class="input-group">
 
-                        <label>
-                            Setup
-                        </label>
+                        <label>Setup</label>
 
                         <select id="setup">
 
-                            <option value="Liquidity Sweep">
+                            <option>
                                 Liquidity Sweep
                             </option>
 
-                            <option value="Breakout">
+                            <option>
                                 Breakout
                             </option>
 
-                            <option value="Retest">
+                            <option>
                                 Retest
                             </option>
 
-                            <option value="Order Block">
+                            <option>
                                 Order Block
                             </option>
 
-                            <option value="FVG">
+                            <option>
                                 FVG
                             </option>
 
-                            <option value="Support/Resistance">
+                            <option>
                                 Support/Resistance
                             </option>
 
-                            <option value="Other">
+                            <option>
+                                Previous High/Low
+                            </option>
+
+                            <option>
                                 Other
                             </option>
 
@@ -389,13 +468,9 @@
                     </div>
 
 
-                    <!-- RESULT -->
-
                     <div class="input-group">
 
-                        <label>
-                            Result
-                        </label>
+                        <label>Result</label>
 
                         <select id="result">
 
@@ -416,70 +491,65 @@
                     </div>
 
 
-                    <!-- PROFIT -->
-
                     <div class="input-group">
 
-                        <label>
-                            Profit / Loss
-                        </label>
+                        <label>Profit / Loss</label>
 
-                        <input
-                            type="number"
-                            id="profit"
-                            step="any"
-                            required>
+                        <input type="number"
+                               id="profit"
+                               step="any"
+                               required>
 
                     </div>
 
 
-                    <!-- MISTAKE -->
-
                     <div class="input-group">
 
-                        <label>
-                            Mistake
-                        </label>
+                        <label>Mistake</label>
 
                         <select id="mistake">
 
-                            <option value="No mistake">
+                            <option>
                                 No mistake
                             </option>
 
-                            <option value="Late Entry">
+                            <option>
                                 Late Entry
                             </option>
 
-                            <option value="No SL">
+                            <option>
                                 No SL
                             </option>
 
-                            <option value="Over Risk">
+                            <option>
                                 Over Risk
                             </option>
 
-                            <option value="Revenge Trade">
+                            <option>
                                 Revenge Trade
                             </option>
 
-                            <option value="FOMO">
+                            <option>
                                 FOMO
                             </option>
 
-                            <option value="Early Exit">
+                            <option>
                                 Early Exit
                             </option>
 
-                            <option value="Overtrading">
+                            <option>
                                 Overtrading
                             </option>
 
-                            <option value="Moved SL">
+                            <option>
                                 Moved SL
                             </option>
 
-                            <option value="Other">
+                            <option>
+                                Entered Without Setup
+                            </option>
+
+                            <option>
                                 Other
                             </option>
 
@@ -488,18 +558,12 @@
                     </div>
 
 
-                    <!-- NOTES -->
-
                     <div class="input-group full-width">
 
-                        <label>
-                            Notes
-                        </label>
+                        <label>Notes</label>
 
-                        <textarea
-                            id="notes"
-                            placeholder="Write anything about this trade...">
-                        </textarea>
+                        <textarea id="notes"
+                                  placeholder="What happened in this trade?"></textarea>
 
                     </div>
 
@@ -507,16 +571,12 @@
                 </div>
 
 
-                <!-- SAVE -->
-
-                <button
-                    type="submit"
-                    class="primary-btn save-btn">
+                <button type="submit"
+                        class="primary-btn save-btn">
 
                     Save Trade
 
                 </button>
-
 
             </form>
 
@@ -525,87 +585,60 @@
 
 
         <!-- =================================================
-             WEEKLY STATISTICS
-        ================================================= -->
+             WEEKLY
+        ================================================== -->
 
         <section>
 
-            <h2>Weekly Statistics</h2>
+            <div class="section-title">
 
-
-            <div class="dashboard-grid">
-
-
-                <div class="card">
-
-                    <span>
-                        Trades
+                <div>
+                    <span class="small-label">
+                        THIS WEEK
                     </span>
 
-                    <strong id="weekTrades">
-                        0
-                    </strong>
-
+                    <h2>Weekly Statistics</h2>
                 </div>
 
+            </div>
 
-                <div class="card">
 
-                    <span>
-                        Wins
-                    </span>
+            <div class="mini-grid">
 
+                <div class="mini-card">
+                    <span>Trades</span>
+                    <strong id="weekTrades">0</strong>
+                </div>
+
+                <div class="mini-card">
+                    <span>Wins</span>
                     <strong class="green"
                             id="weekWins">
-
                         0
-
                     </strong>
-
                 </div>
 
-
-                <div class="card">
-
-                    <span>
-                        Losses
-                    </span>
-
+                <div class="mini-card">
+                    <span>Losses</span>
                     <strong class="red"
                             id="weekLosses">
-
                         0
-
                     </strong>
-
                 </div>
 
-
-                <div class="card">
-
-                    <span>
-                        Win Rate
-                    </span>
-
+                <div class="mini-card">
+                    <span>Win Rate</span>
                     <strong id="weekWinRate">
                         0%
                     </strong>
-
                 </div>
 
-
-                <div class="card">
-
-                    <span>
-                        P/L
-                    </span>
-
+                <div class="mini-card">
+                    <span>P/L</span>
                     <strong id="weekPL">
                         0.00
                     </strong>
-
                 </div>
-
 
             </div>
 
@@ -614,87 +647,62 @@
 
 
         <!-- =================================================
-             MONTHLY STATISTICS
-        ================================================= -->
+             MONTHLY
+        ================================================== -->
 
         <section>
 
-            <h2>Monthly Statistics</h2>
+            <div class="section-title">
 
-
-            <div class="dashboard-grid">
-
-
-                <div class="card">
-
-                    <span>
-                        Trades
+                <div>
+                    <span class="small-label">
+                        THIS MONTH
                     </span>
 
+                    <h2>Monthly Statistics</h2>
+                </div>
+
+            </div>
+
+
+            <div class="mini-grid">
+
+                <div class="mini-card">
+                    <span>Trades</span>
                     <strong id="monthTrades">
                         0
                     </strong>
-
                 </div>
 
-
-                <div class="card">
-
-                    <span>
-                        Wins
-                    </span>
-
+                <div class="mini-card">
+                    <span>Wins</span>
                     <strong class="green"
                             id="monthWins">
-
                         0
-
                     </strong>
-
                 </div>
 
-
-                <div class="card">
-
-                    <span>
-                        Losses
-                    </span>
-
+                <div class="mini-card">
+                    <span>Losses</span>
                     <strong class="red"
                             id="monthLosses">
-
                         0
-
                     </strong>
-
                 </div>
 
-
-                <div class="card">
-
-                    <span>
-                        Win Rate
-                    </span>
-
+                <div class="mini-card">
+                    <span>Win Rate</span>
                     <strong id="monthWinRate">
                         0%
                     </strong>
-
                 </div>
 
-
-                <div class="card">
-
-                    <span>
-                        P/L
-                    </span>
-
+                <div class="mini-card">
+                    <span>P/L</span>
                     <strong id="monthPL">
                         0.00
                     </strong>
-
                 </div>
-
 
             </div>
 
@@ -704,49 +712,50 @@
 
         <!-- =================================================
              TRADE HISTORY
-        ================================================= -->
+        ================================================== -->
 
         <section>
 
-            <h2>Trade History</h2>
+            <div class="section-title">
+
+                <div>
+                    <span class="small-label">
+                        HISTORY
+                    </span>
+
+                    <h2>Trade History</h2>
+                </div>
+
+
+                <input id="searchTrades"
+                       class="search-input"
+                       type="search"
+                       placeholder="Search trades...">
+
+            </div>
 
 
             <div class="table-container">
 
-
                 <table>
-
 
                     <thead>
 
                         <tr>
 
                             <th>Date</th>
-
                             <th>Time</th>
-
                             <th>Pair</th>
-
                             <th>Direction</th>
-
                             <th>Entry</th>
-
                             <th>SL</th>
-
                             <th>TP</th>
-
                             <th>R:R</th>
-
                             <th>Setup</th>
-
                             <th>Result</th>
-
                             <th>P/L</th>
-
                             <th>Mistake</th>
-
                             <th>Notes</th>
-
                             <th>Action</th>
 
                         </tr>
@@ -757,21 +766,17 @@
                     <tbody id="tradeTableBody">
 
                         <tr>
-
                             <td colspan="14"
-                                style="text-align:center;">
+                                class="empty-table">
 
                                 No trades yet
 
                             </td>
-
                         </tr>
 
                     </tbody>
 
-
                 </table>
-
 
             </div>
 
@@ -781,20 +786,23 @@
     </main>
 
 
+    <!-- FOOTER -->
+
+    <footer>
+
+        <p>
+            UjR Fx Journal
+            <span>•</span>
+            Trade Smart. Review Everything.
+        </p>
+
+    </footer>
+
 </div>
 
 
-
-<!-- =====================================================
-     JAVASCRIPT
-===================================================== -->
-
-<script
-    type="module"
-    src="./script.js">
-</script>
-
+<script type="module"
+        src="./script.js"></script>
 
 </body>
-
 </html>
