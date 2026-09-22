@@ -9,6 +9,7 @@
     --bg2: #0c1118;
     --card: rgba(18, 24, 33, 0.82);
     --card2: #111821;
+
     --border: rgba(255,255,255,0.08);
 
     --text: #f4f7fb;
@@ -29,10 +30,7 @@ html {
 }
 
 body {
-    font-family:
-        Inter,
-        Arial,
-        sans-serif;
+    font-family: Inter, Arial, sans-serif;
 
     background:
         radial-gradient(
@@ -70,9 +68,9 @@ section {
 }
 
 
-/* =====================================================
+/* =========================================
    LOGIN
-===================================================== */
+========================================= */
 
 .login-screen {
     min-height: 100vh;
@@ -125,6 +123,7 @@ section {
 .brand-logo img {
     width: 100%;
     height: 100%;
+
     object-fit: cover;
 }
 
@@ -140,12 +139,11 @@ section {
 
 .login-note {
     margin-top: 18px;
+
     color: #687382;
+
     font-size: 12px;
 }
-
-
-/* GOOGLE */
 
 .google-btn {
     width: 100%;
@@ -181,12 +179,13 @@ section {
 }
 
 
-/* =====================================================
+/* =========================================
    HEADER
-===================================================== */
+========================================= */
 
 .header {
     position: sticky;
+
     top: 0;
 
     z-index: 50;
@@ -203,16 +202,16 @@ section {
     background:
         rgba(7,10,15,0.82);
 
-    border-bottom:
-        1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 
-    backdrop-filter:
-        blur(20px);
+    backdrop-filter: blur(20px);
 }
 
 .brand {
     display: flex;
+
     align-items: center;
+
     gap: 13px;
 }
 
@@ -231,24 +230,28 @@ section {
 
 .brand p {
     font-size: 12px;
+
     color: var(--muted);
 }
 
 .header-right {
     display: flex;
+
     align-items: center;
+
     gap: 12px;
 }
 
 .user-box {
     display: flex;
+
     align-items: center;
+
     gap: 9px;
 
     padding: 6px 10px;
 
-    border:
-        1px solid var(--border);
+    border: 1px solid var(--border);
 
     border-radius: 12px;
 
@@ -258,11 +261,13 @@ section {
 
 .user-box strong {
     display: block;
+
     font-size: 13px;
 }
 
 .user-box small {
     color: var(--muted);
+
     font-size: 10px;
 }
 
@@ -298,9 +303,9 @@ section {
 }
 
 
-/* =====================================================
+/* =========================================
    CONTAINER
-===================================================== */
+========================================= */
 
 .container {
     width: min(1450px, 92%);
@@ -311,14 +316,15 @@ section {
 }
 
 
-/* =====================================================
+/* =========================================
    WELCOME
-===================================================== */
+========================================= */
 
 .welcome-section {
     display: flex;
 
     justify-content: space-between;
+
     align-items: center;
 
     gap: 20px;
@@ -360,14 +366,15 @@ section {
 }
 
 
-/* =====================================================
-   SECTION TITLE
-===================================================== */
+/* =========================================
+   SECTION TITLES
+========================================= */
 
 .section-title {
     display: flex;
 
     justify-content: space-between;
+
     align-items: center;
 
     gap: 15px;
@@ -377,13 +384,14 @@ section {
 
 .section-title h2 {
     font-size: 22px;
+
     margin-top: 3px;
 }
 
 
-/* =====================================================
+/* =========================================
    BUTTONS
-===================================================== */
+========================================= */
 
 .primary-btn {
     border: none;
@@ -418,7 +426,9 @@ section {
 
 .primary-btn:disabled {
     opacity: .6;
+
     cursor: not-allowed;
+
     transform: none;
 }
 
@@ -443,9 +453,9 @@ section {
 }
 
 
-/* =====================================================
+/* =========================================
    DASHBOARD
-===================================================== */
+========================================= */
 
 .dashboard-grid {
     display: grid;
@@ -461,8 +471,7 @@ section {
 
     padding: 20px;
 
-    border:
-        1px solid var(--border);
+    border: 1px solid var(--border);
 
     border-radius: var(--radius);
 
@@ -508,6 +517,7 @@ section {
     height: 43px;
 
     display: grid;
+
     place-items: center;
 
     border-radius: 13px;
@@ -518,11 +528,6 @@ section {
     font-size: 18px;
 }
 
-
-/* =====================================================
-   COLORS
-===================================================== */
-
 .green {
     color: var(--green) !important;
 }
@@ -532,9 +537,9 @@ section {
 }
 
 
-/* =====================================================
-   CHART
-===================================================== */
+/* =========================================
+   EQUITY CHART
+========================================= */
 
 .chart-card {
     position: relative;
@@ -543,8 +548,7 @@ section {
 
     padding: 20px;
 
-    border:
-        1px solid var(--border);
+    border: 1px solid var(--border);
 
     border-radius: var(--radius);
 
@@ -554,6 +558,7 @@ section {
 
 #equityChart {
     width: 100%;
+
     height: 290px;
 
     display: block;
@@ -567,6 +572,7 @@ section {
     display: flex;
 
     justify-content: center;
+
     align-items: center;
 
     color: var(--muted);
@@ -575,15 +581,195 @@ section {
 }
 
 
-/* =====================================================
+/* =========================================
+   PREMIUM ANALYTICS
+========================================= */
+
+.premium-section {
+    margin-top: 35px;
+}
+
+.premium-badge {
+    display: inline-flex;
+
+    align-items: center;
+
+    padding: 6px 11px;
+
+    border-radius: 8px;
+
+    font-size: 10px;
+
+    font-weight: 900;
+
+    letter-spacing: 1px;
+
+    color: #fff;
+
+    background:
+        linear-gradient(
+            135deg,
+            #7c5cff,
+            #5b8cff
+        );
+
+    box-shadow:
+        0 6px 20px rgba(124,92,255,.25);
+}
+
+
+/* PREMIUM CARDS */
+
+.premium-overview {
+    display: grid;
+
+    grid-template-columns:
+        repeat(4, 1fr);
+
+    gap: 14px;
+
+    margin-bottom: 25px;
+}
+
+.premium-card {
+    padding: 22px;
+
+    border:
+        1px solid rgba(124,92,255,.18);
+
+    border-radius: 18px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(124,92,255,.09),
+            rgba(255,255,255,.02)
+        );
+
+    transition: .2s;
+}
+
+.premium-card:hover {
+    transform: translateY(-3px);
+
+    border-color:
+        rgba(124,92,255,.35);
+}
+
+.premium-card span {
+    display: block;
+
+    color: var(--muted);
+
+    font-size: 12px;
+
+    margin-bottom: 8px;
+}
+
+.premium-card strong {
+    display: block;
+
+    font-size: 21px;
+
+    margin-bottom: 5px;
+}
+
+.premium-card small {
+    color: #737e8d;
+
+    font-size: 11px;
+}
+
+
+/* PREMIUM PANELS */
+
+.premium-panel {
+    margin-bottom: 22px;
+
+    border:
+        1px solid rgba(124, 92, 255, .13);
+
+    border-radius: 18px;
+
+    overflow: hidden;
+
+    background:
+        rgba(255,255,255,.018);
+}
+
+.premium-panel-header {
+    padding: 20px;
+
+    border-bottom:
+        1px solid var(--border);
+
+    background:
+        rgba(124,92,255,.035);
+}
+
+.premium-panel-header h3 {
+    margin-top: 4px;
+
+    font-size: 18px;
+}
+
+.premium-table-container {
+    width: 100%;
+
+    overflow-x: auto;
+}
+
+.premium-table {
+    width: 100%;
+
+    min-width: 700px;
+
+    border-collapse: collapse;
+}
+
+.premium-table th {
+    padding: 14px 16px;
+
+    text-align: left;
+
+    color: #8e99a8;
+
+    font-size: 10px;
+
+    text-transform: uppercase;
+
+    letter-spacing: .7px;
+
+    background:
+        rgba(255,255,255,.02);
+
+    border-bottom:
+        1px solid var(--border);
+}
+
+.premium-table td {
+    padding: 14px 16px;
+
+    font-size: 12px;
+
+    border-bottom:
+        1px solid rgba(255,255,255,.045);
+}
+
+.premium-table tbody tr:hover {
+    background:
+        rgba(124,92,255,.035);
+}
+
+
+/* =========================================
    FORM
-===================================================== */
+========================================= */
 
 .form-section {
     padding: 28px;
 
-    border:
-        1px solid var(--border);
+    border: 1px solid var(--border);
 
     border-radius: var(--radius);
 
@@ -651,8 +837,7 @@ section {
         rgba(124,92,255,0.7);
 
     box-shadow:
-        0 0 0 3px
-        rgba(124,92,255,0.1);
+        0 0 0 3px rgba(124,92,255,0.1);
 }
 
 .input-group select option {
@@ -676,9 +861,9 @@ section {
 }
 
 
-/* =====================================================
-   MINI STATS
-===================================================== */
+/* =========================================
+   WEEKLY / MONTHLY
+========================================= */
 
 .mini-grid {
     display: grid;
@@ -716,18 +901,18 @@ section {
 }
 
 
-/* =====================================================
+/* =========================================
    SEARCH
-===================================================== */
+========================================= */
 
 .search-input {
     width: 230px;
 }
 
 
-/* =====================================================
-   TABLE
-===================================================== */
+/* =========================================
+   TRADE TABLE
+========================================= */
 
 .table-container {
     width: 100%;
@@ -796,7 +981,9 @@ tbody tr:hover {
 }
 
 
-/* RESULT */
+/* =========================================
+   RESULT BADGES
+========================================= */
 
 .result-badge {
     display: inline-flex;
@@ -832,7 +1019,9 @@ tbody tr:hover {
 }
 
 
-/* DELETE */
+/* =========================================
+   DELETE
+========================================= */
 
 .delete-btn {
     border:
@@ -858,9 +1047,9 @@ tbody tr:hover {
 }
 
 
-/* =====================================================
+/* =========================================
    FOOTER
-===================================================== */
+========================================= */
 
 footer {
     padding: 25px;
@@ -880,9 +1069,9 @@ footer span {
 }
 
 
-/* =====================================================
+/* =========================================
    SCROLLBAR
-===================================================== */
+========================================= */
 
 ::-webkit-scrollbar {
     width: 8px;
@@ -904,9 +1093,9 @@ footer span {
 }
 
 
-/* =====================================================
-   MOBILE
-===================================================== */
+/* =========================================
+   TABLET
+========================================= */
 
 @media (max-width: 1100px) {
 
@@ -924,8 +1113,18 @@ footer span {
         grid-template-columns:
             repeat(2, 1fr);
     }
+
+    .premium-overview {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
 }
 
+
+/* =========================================
+   MOBILE
+========================================= */
 
 @media (max-width: 700px) {
 
@@ -1011,8 +1210,21 @@ footer span {
     .stat-icon {
         display: none;
     }
+
+    .premium-overview {
+        grid-template-columns: 1fr;
+    }
+
+    .premium-card {
+        padding: 18px;
+    }
+
 }
 
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
 
 @media (max-width: 430px) {
 
@@ -1033,4 +1245,5 @@ footer span {
         width: 40px;
         height: 40px;
     }
+
 }
