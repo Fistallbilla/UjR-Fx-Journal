@@ -1,295 +1,672 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>UjR Fx Journal</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<header class="header">
-    <div>
+<!-- ================= LOGIN SCREEN ================= -->
+
+<div id="loginScreen" class="login-screen">
+
+    <div class="login-card">
+
         <h1>UjR Fx Journal</h1>
+
         <p>Trading Performance Tracker</p>
+
+        <button id="googleLoginBtn" class="google-btn">
+            <span>G</span>
+            Continue with Google
+        </button>
+
+        <small>
+            Your trades will be saved securely in the cloud.
+        </small>
+
     </div>
 
-    <button class="primary-btn" onclick="scrollToTrade()">
-        + Add Trade
-    </button>
-</header>
+</div>
 
-<main class="container">
 
-    <!-- DASHBOARD -->
-    <section>
-        <h2>Dashboard</h2>
+<!-- ================= MAIN APP ================= -->
 
-        <div class="dashboard-grid">
+<div id="app" class="app-hidden">
 
-            <div class="card">
-                <span>Total Trades</span>
-                <strong id="totalTrades">0</strong>
-            </div>
+    <header class="header">
 
-            <div class="card">
-                <span>Win Rate</span>
-                <strong id="winRate">0%</strong>
-            </div>
-
-            <div class="card">
-                <span>Wins</span>
-                <strong class="green" id="wins">0</strong>
-            </div>
-
-            <div class="card">
-                <span>Losses</span>
-                <strong class="red" id="losses">0</strong>
-            </div>
-
-            <div class="card">
-                <span>Total P/L</span>
-                <strong id="totalPL">0.00</strong>
-            </div>
-
+        <div>
+            <h1>UjR Fx Journal</h1>
+            <p>Trading Performance Tracker</p>
         </div>
-    </section>
 
+        <div class="header-right">
 
-    <!-- ADD TRADE -->
-    <section id="tradeSection" class="form-section">
+            <div class="user-box">
 
-        <h2>Add Trade</h2>
+                <img
+                    id="userPhoto"
+                    src=""
+                    alt="User"
+                >
 
-        <form id="tradeForm">
-
-            <div class="form-grid">
-
-                <div class="input-group">
-                    <label>Date</label>
-                    <input type="date" id="date" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Pair</label>
-                    <input type="text" id="pair" value="XAUUSD" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Direction</label>
-                    <select id="direction">
-                        <option value="Buy">Buy</option>
-                        <option value="Sell">Sell</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Entry</label>
-                    <input type="number" id="entry" step="any" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Stop Loss</label>
-                    <input type="number" id="sl" step="any" required>
-                </div>
-
-                <div class="input-group">
-                    <label>Take Profit</label>
-                    <input type="number" id="tp" step="any" required>
-                </div>
-
-                <!-- SETUP -->
-                <div class="input-group">
-                    <label>Setup</label>
-                    <select id="setup">
-                        <option value="Liquidity Sweep">Liquidity Sweep</option>
-                        <option value="Breakout">Breakout</option>
-                        <option value="Retest">Retest</option>
-                        <option value="Order Block">Order Block</option>
-                        <option value="FVG">FVG</option>
-                        <option value="Support/Resistance">Support/Resistance</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-
-                <!-- RESULT -->
-                <div class="input-group">
-                    <label>Result</label>
-                    <select id="result">
-                        <option value="Win">Win</option>
-                        <option value="Loss">Loss</option>
-                        <option value="Breakeven">Breakeven</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Profit / Loss</label>
-                    <input type="number" id="profit" step="any" required>
-                </div>
-
-                <!-- MISTAKE -->
-                <div class="input-group">
-                    <label>Mistake</label>
-                    <select id="mistake">
-                        <option value="No mistake">No mistake</option>
-                        <option value="Late Entry">Late Entry</option>
-                        <option value="No SL">No SL</option>
-                        <option value="Over Risk">Over Risk</option>
-                        <option value="Revenge Trade">Revenge Trade</option>
-                        <option value="FOMO">FOMO</option>
-                        <option value="Early Exit">Early Exit</option>
-                        <option value="Overtrading">Overtrading</option>
-                        <option value="Moved SL">Moved SL</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-
-                <div class="input-group full-width">
-                    <label>Notes</label>
-                    <textarea id="notes" placeholder="Write anything about this trade..."></textarea>
-                </div>
+                <span id="userName">
+                    User
+                </span>
 
             </div>
 
-            <button type="submit" class="primary-btn save-btn">
-                Save Trade
+            <button
+                id="logoutBtn"
+                class="logout-btn"
+            >
+                Logout
             </button>
 
-        </form>
-    </section>
-
-
-    <!-- WEEKLY STATISTICS -->
-    <section>
-
-        <h2>Weekly Statistics</h2>
-
-        <div class="stats-grid">
-
-            <div class="stat-card">
-                <span>Trades</span>
-                <strong id="weekTrades">0</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>Wins</span>
-                <strong class="green" id="weekWins">0</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>Losses</span>
-                <strong class="red" id="weekLosses">0</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>Win Rate</span>
-                <strong id="weekWinRate">0%</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>P/L</span>
-                <strong id="weekPL">0.00</strong>
-            </div>
-
-        </div>
-
-        <div class="chart-card">
-            <h3>Last 8 Weeks</h3>
-            <div id="weeklyChart" class="chart"></div>
-        </div>
-
-    </section>
-
-
-    <!-- MONTHLY STATISTICS -->
-    <section>
-
-        <h2>Monthly Statistics</h2>
-
-        <div class="stats-grid">
-
-            <div class="stat-card">
-                <span>Trades</span>
-                <strong id="monthTrades">0</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>Wins</span>
-                <strong class="green" id="monthWins">0</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>Losses</span>
-                <strong class="red" id="monthLosses">0</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>Win Rate</span>
-                <strong id="monthWinRate">0%</strong>
-            </div>
-
-            <div class="stat-card">
-                <span>P/L</span>
-                <strong id="monthPL">0.00</strong>
-            </div>
-
-        </div>
-
-        <div class="chart-card">
-            <h3>Last 12 Months</h3>
-            <div id="monthlyChart" class="chart"></div>
-        </div>
-
-    </section>
-
-
-    <!-- TRADE HISTORY -->
-    <section>
-
-        <div class="history-header">
-            <h2>Trade History</h2>
-
-            <button class="danger-btn" onclick="clearAllTrades()">
-                Clear All
+            <button
+                class="primary-btn"
+                onclick="scrollToTrade()"
+            >
+                + Add Trade
             </button>
-        </div>
-
-        <div class="table-wrapper">
-
-            <table>
-
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Pair</th>
-                        <th>Direction</th>
-                        <th>Entry</th>
-                        <th>SL</th>
-                        <th>TP</th>
-                        <th>R:R</th>
-                        <th>Setup</th>
-                        <th>Result</th>
-                        <th>P/L</th>
-                        <th>Mistake</th>
-                        <th>Notes</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-
-                <tbody id="tradeHistory"></tbody>
-
-            </table>
-
-            <p id="emptyMessage" class="empty-message">
-                No trades recorded yet.
-            </p>
 
         </div>
 
-    </section>
+    </header>
 
-</main>
+
+    <main class="container">
+
+
+        <!-- ================= DASHBOARD ================= -->
+
+        <section>
+
+            <h2>Dashboard</h2>
+
+            <div class="dashboard-grid">
+
+                <div class="card">
+                    <span>Total Trades</span>
+                    <strong id="totalTrades">0</strong>
+                </div>
+
+                <div class="card">
+                    <span>Win Rate</span>
+                    <strong id="winRate">0%</strong>
+                </div>
+
+                <div class="card">
+                    <span>Wins</span>
+                    <strong
+                        class="green"
+                        id="wins"
+                    >
+                        0
+                    </strong>
+                </div>
+
+                <div class="card">
+                    <span>Losses</span>
+                    <strong
+                        class="red"
+                        id="losses"
+                    >
+                        0
+                    </strong>
+                </div>
+
+                <div class="card">
+                    <span>Total P/L</span>
+                    <strong id="totalPL">
+                        0.00
+                    </strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ADD TRADE ================= -->
+
+        <section
+            id="tradeSection"
+            class="form-section"
+        >
+
+            <h2>Add Trade</h2>
+
+            <form id="tradeForm">
+
+                <div class="form-grid">
+
+
+                    <div class="input-group">
+
+                        <label>Date</label>
+
+                        <input
+                            type="date"
+                            id="date"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>Pair</label>
+
+                        <input
+                            type="text"
+                            id="pair"
+                            value="XAUUSD"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>Direction</label>
+
+                        <select id="direction">
+
+                            <option value="Buy">
+                                Buy
+                            </option>
+
+                            <option value="Sell">
+                                Sell
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>Entry</label>
+
+                        <input
+                            type="number"
+                            id="entry"
+                            step="any"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>Stop Loss</label>
+
+                        <input
+                            type="number"
+                            id="sl"
+                            step="any"
+                            required
+                        >
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>Take Profit</label>
+
+                        <input
+                            type="number"
+                            id="tp"
+                            step="any"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- SETUP -->
+
+                    <div class="input-group">
+
+                        <label>Setup</label>
+
+                        <select id="setup">
+
+                            <option value="Liquidity Sweep">
+                                Liquidity Sweep
+                            </option>
+
+                            <option value="Breakout">
+                                Breakout
+                            </option>
+
+                            <option value="Retest">
+                                Retest
+                            </option>
+
+                            <option value="Order Block">
+                                Order Block
+                            </option>
+
+                            <option value="FVG">
+                                FVG
+                            </option>
+
+                            <option value="Support/Resistance">
+                                Support/Resistance
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- RESULT -->
+
+                    <div class="input-group">
+
+                        <label>Result</label>
+
+                        <select id="result">
+
+                            <option value="Win">
+                                Win
+                            </option>
+
+                            <option value="Loss">
+                                Loss
+                            </option>
+
+                            <option value="Breakeven">
+                                Breakeven
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="input-group">
+
+                        <label>Profit / Loss</label>
+
+                        <input
+                            type="number"
+                            id="profit"
+                            step="any"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- MISTAKE -->
+
+                    <div class="input-group">
+
+                        <label>Mistake</label>
+
+                        <select id="mistake">
+
+                            <option value="No mistake">
+                                No mistake
+                            </option>
+
+                            <option value="Late Entry">
+                                Late Entry
+                            </option>
+
+                            <option value="No SL">
+                                No SL
+                            </option>
+
+                            <option value="Over Risk">
+                                Over Risk
+                            </option>
+
+                            <option value="Revenge Trade">
+                                Revenge Trade
+                            </option>
+
+                            <option value="FOMO">
+                                FOMO
+                            </option>
+
+                            <option value="Early Exit">
+                                Early Exit
+                            </option>
+
+                            <option value="Overtrading">
+                                Overtrading
+                            </option>
+
+                            <option value="Moved SL">
+                                Moved SL
+                            </option>
+
+                            <option value="Other">
+                                Other
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <!-- NOTES -->
+
+                    <div class="input-group full-width">
+
+                        <label>Notes</label>
+
+                        <textarea
+                            id="notes"
+                            placeholder="Write anything about this trade..."
+                        ></textarea>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="primary-btn save-btn"
+                >
+                    Save Trade
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <!-- ================= WEEKLY ================= -->
+
+        <section>
+
+            <h2>Weekly Statistics</h2>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span>Trades</span>
+                    <strong id="weekTrades">0</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Wins</span>
+                    <strong
+                        class="green"
+                        id="weekWins"
+                    >
+                        0
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Losses</span>
+                    <strong
+                        class="red"
+                        id="weekLosses"
+                    >
+                        0
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Win Rate</span>
+                    <strong id="weekWinRate">
+                        0%
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>P/L</span>
+                    <strong id="weekPL">
+                        0.00
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <div class="chart-card">
+
+                <h3>Last 8 Weeks</h3>
+
+                <div
+                    id="weeklyChart"
+                    class="chart"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= MONTHLY ================= -->
+
+        <section>
+
+            <h2>Monthly Statistics</h2>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span>Trades</span>
+                    <strong id="monthTrades">0</strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Wins</span>
+                    <strong
+                        class="green"
+                        id="monthWins"
+                    >
+                        0
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Losses</span>
+                    <strong
+                        class="red"
+                        id="monthLosses"
+                    >
+                        0
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>Win Rate</span>
+                    <strong id="monthWinRate">
+                        0%
+                    </strong>
+                </div>
+
+                <div class="stat-card">
+                    <span>P/L</span>
+                    <strong id="monthPL">
+                        0.00
+                    </strong>
+                </div>
+
+            </div>
+
+
+            <div class="chart-card">
+
+                <h3>Last 12 Months</h3>
+
+                <div
+                    id="monthlyChart"
+                    class="chart"
+                ></div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= HISTORY ================= -->
+
+        <section>
+
+            <div class="history-header">
+
+                <h2>Trade History</h2>
+
+                <button
+                    class="danger-btn"
+                    onclick="clearAllTrades()"
+                >
+                    Clear All
+                </button>
+
+            </div>
+
+
+            <div class="table-wrapper">
+
+                <table>
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Date</th>
+                            <th>Pair</th>
+                            <th>Direction</th>
+                            <th>Entry</th>
+                            <th>SL</th>
+                            <th>TP</th>
+                            <th>R:R</th>
+                            <th>Setup</th>
+                            <th>Result</th>
+                            <th>P/L</th>
+                            <th>Mistake</th>
+                            <th>Notes</th>
+                            <th>Action</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="tradeHistory"></tbody>
+
+                </table>
+
+
+                <p
+                    id="emptyMessage"
+                    class="empty-message"
+                >
+                    No trades recorded yet.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ================= FIREBASE ================= -->
+
+<script type="module">
+
+    import {
+        initializeApp
+    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+    import {
+        getAuth,
+        GoogleAuthProvider,
+        signInWithPopup,
+        signOut,
+        onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+    import {
+        getFirestore
+    } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+
+    const firebaseConfig = {
+
+        apiKey: "AIzaSyAdCB2Vke4iXLm1zPj43cNQwC65gZlQ6Ns",
+
+        authDomain: "journal-38e0e.firebaseapp.com",
+
+        projectId: "journal-38e0e",
+
+        storageBucket: "journal-38e0e.firebasestorage.app",
+
+        messagingSenderId: "382226906837",
+
+        appId: "1:382226906837:web:38df881c0f7beb24256c5c",
+
+        measurementId: "G-R6LXDMQ9K2"
+
+    };
+
+
+    const app =
+        initializeApp(firebaseConfig);
+
+
+    const auth =
+        getAuth(app);
+
+
+    const db =
+        getFirestore(app);
+
+
+    const provider =
+        new GoogleAuthProvider();
+
+
+    // Make Firebase available to script.js
+
+    window.firebaseAuth = auth;
+
+    window.firebaseDB = db;
+
+    window.googleProvider = provider;
+
+    window.signInWithPopupFirebase =
+        signInWithPopup;
+
+    window.signOutFirebase =
+        signOut;
+
+    window.onAuthStateChangedFirebase =
+        onAuthStateChanged;
+
+</script>
+
 
 <script src="script.js"></script>
 
