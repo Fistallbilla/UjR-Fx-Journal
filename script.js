@@ -1,16 +1,17 @@
 // ======================================================
 // UjR Fx Journal
-// Advanced Firebase Trading Journal
+// Firebase + Premium Analytics
 // ======================================================
 
 
 // ======================================================
-// FIREBASE
+// FIREBASE IMPORTS
 // ======================================================
 
 import {
     initializeApp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
 
 import {
     getAuth,
@@ -19,6 +20,7 @@ import {
     signOut,
     onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
 
 import {
     getFirestore,
@@ -30,6 +32,10 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
+
+// ======================================================
+// FIREBASE CONFIG
+// ======================================================
 
 const firebaseConfig = {
 
@@ -56,6 +62,10 @@ const firebaseConfig = {
 };
 
 
+// ======================================================
+// INITIALIZE FIREBASE
+// ======================================================
+
 const app =
     initializeApp(firebaseConfig);
 
@@ -69,6 +79,10 @@ const provider =
     new GoogleAuthProvider();
 
 
+// ======================================================
+// GLOBAL VARIABLES
+// ======================================================
+
 let currentUser = null;
 
 let unsubscribeTrades = null;
@@ -77,7 +91,7 @@ let allTrades = [];
 
 
 // ======================================================
-// ELEMENTS
+// DOM ELEMENTS
 // ======================================================
 
 const loginScreen =
@@ -109,7 +123,7 @@ const searchTrades =
 
 
 // ======================================================
-// DATE
+// SET TODAY
 // ======================================================
 
 function setToday() {
@@ -119,18 +133,19 @@ function setToday() {
 
     if (!input) return;
 
-    const now = new Date();
+    const now =
+        new Date();
 
     const year =
         now.getFullYear();
 
     const month =
         String(now.getMonth() + 1)
-            .padStart(2, "0");
+        .padStart(2, "0");
 
     const day =
         String(now.getDate())
-            .padStart(2, "0");
+        .padStart(2, "0");
 
     input.value =
         `${year}-${month}-${day}`;
@@ -149,7 +164,8 @@ googleLoginBtn?.addEventListener(
 
         try {
 
-            googleLoginBtn.disabled = true;
+            googleLoginBtn.disabled =
+                true;
 
             googleLoginBtn.textContent =
                 "Signing in...";
@@ -171,11 +187,13 @@ googleLoginBtn?.addEventListener(
                 error.message
             );
 
-            googleLoginBtn.disabled = false;
+            googleLoginBtn.disabled =
+                false;
 
             googleLoginBtn.textContent =
                 "Continue with Google";
         }
+
     }
 );
 
@@ -203,6 +221,7 @@ logoutBtn?.addEventListener(
                 "Logout failed."
             );
         }
+
     }
 );
 
@@ -217,14 +236,14 @@ onAuthStateChanged(
 
         if (user) {
 
-            currentUser = user;
+            currentUser =
+                user;
 
             loginScreen.style.display =
                 "none";
 
             appContainer.style.display =
                 "block";
-
 
             userName.textContent =
                 user.displayName ||
@@ -245,9 +264,12 @@ onAuthStateChanged(
 
         } else {
 
-            currentUser = null;
+            currentUser =
+                null;
 
-            allTrades = [];
+            allTrades =
+                [];
+
 
             loginScreen.style.display =
                 "flex";
@@ -260,9 +282,12 @@ onAuthStateChanged(
 
                 unsubscribeTrades();
 
-                unsubscribeTrades = null;
+                unsubscribeTrades =
+                    null;
             }
+
         }
+
     }
 );
 
@@ -288,55 +313,94 @@ tradeForm?.addEventListener(
         }
 
 
+        // ------------------------------------------
+        // GET FORM VALUES
+        // ------------------------------------------
+
         const date =
-            document.getElementById("date").value;
+            document.getElementById(
+                "date"
+            ).value;
+
 
         const pair =
-            document.getElementById("pair").value
-                .trim()
-                .toUpperCase();
+            document.getElementById(
+                "pair"
+            ).value
+            .trim()
+            .toUpperCase();
+
 
         const direction =
-            document.getElementById("direction").value;
+            document.getElementById(
+                "direction"
+            ).value;
+
 
         const entry =
             Number(
-                document.getElementById("entry").value
+                document.getElementById(
+                    "entry"
+                ).value
             );
+
 
         const sl =
             Number(
-                document.getElementById("sl").value
+                document.getElementById(
+                    "sl"
+                ).value
             );
+
 
         const tp =
             Number(
-                document.getElementById("tp").value
+                document.getElementById(
+                    "tp"
+                ).value
             );
 
+
         const setup =
-            document.getElementById("setup").value;
+            document.getElementById(
+                "setup"
+            ).value;
+
 
         const result =
-            document.getElementById("result").value;
+            document.getElementById(
+                "result"
+            ).value;
+
 
         const profit =
             Number(
-                document.getElementById("profit").value
+                document.getElementById(
+                    "profit"
+                ).value
             );
 
+
         const mistake =
-            document.getElementById("mistake").value;
+            document.getElementById(
+                "mistake"
+            ).value;
+
 
         const notes =
-            document.getElementById("notes").value
-                .trim();
+            document.getElementById(
+                "notes"
+            ).value
+            .trim();
 
 
-        // Nepal time
+        // ------------------------------------------
+        // TIME
+        // ------------------------------------------
 
         const now =
             new Date();
+
 
         const time =
             now.toLocaleTimeString(
@@ -360,19 +424,31 @@ tradeForm?.addEventListener(
             );
 
 
+        // ------------------------------------------
         // R:R
+        // ------------------------------------------
 
         const risk =
-            Math.abs(entry - sl);
+            Math.abs(
+                entry - sl
+            );
+
 
         const reward =
-            Math.abs(tp - entry);
+            Math.abs(
+                tp - entry
+            );
+
 
         const rr =
             risk > 0
                 ? reward / risk
                 : 0;
 
+
+        // ------------------------------------------
+        // SAVE BUTTON
+        // ------------------------------------------
 
         const saveButton =
             tradeForm.querySelector(
@@ -384,7 +460,8 @@ tradeForm?.addEventListener(
 
             if (saveButton) {
 
-                saveButton.disabled = true;
+                saveButton.disabled =
+                    true;
 
                 saveButton.textContent =
                     "Saving...";
@@ -430,12 +507,12 @@ tradeForm?.addEventListener(
 
                     rr,
 
-                    // reliable ordering
                     savedAt:
                         Date.now(),
 
                     createdAt:
                         serverTimestamp()
+
                 }
             );
 
@@ -444,9 +521,11 @@ tradeForm?.addEventListener(
 
             setToday();
 
+
             document.getElementById(
                 "pair"
-            ).value = "XAUUSD";
+            ).value =
+                "XAUUSD";
 
 
             alert(
@@ -466,16 +545,20 @@ tradeForm?.addEventListener(
                 error.message
             );
 
+
         } finally {
 
             if (saveButton) {
 
-                saveButton.disabled = false;
+                saveButton.disabled =
+                    false;
 
                 saveButton.textContent =
                     "Save Trade";
             }
+
         }
+
     }
 );
 
@@ -486,14 +569,16 @@ tradeForm?.addEventListener(
 
 function loadTrades() {
 
-    if (!currentUser) return;
+    if (!currentUser)
+        return;
 
 
     if (unsubscribeTrades) {
 
         unsubscribeTrades();
 
-        unsubscribeTrades = null;
+        unsubscribeTrades =
+            null;
     }
 
 
@@ -508,11 +593,13 @@ function loadTrades() {
 
     unsubscribeTrades =
         onSnapshot(
+
             tradesRef,
 
             snapshot => {
 
-                allTrades = [];
+                allTrades =
+                    [];
 
 
                 snapshot.forEach(
@@ -526,14 +613,15 @@ function loadTrades() {
                             ...documentSnapshot.data()
 
                         });
+
                     }
                 );
 
 
                 sortTrades();
 
-
                 refreshEverything();
+
             },
 
 
@@ -548,13 +636,15 @@ function loadTrades() {
                     "Could not load trades.\n\n" +
                     error.message
                 );
+
             }
+
         );
 }
 
 
 // ======================================================
-// SORT
+// SORT TRADES
 // ======================================================
 
 function sortTrades() {
@@ -564,17 +654,19 @@ function sortTrades() {
 
             return Number(
                 b.savedAt || 0
-            ) -
+            )
+            -
             Number(
                 a.savedAt || 0
             );
+
         }
     );
 }
 
 
 // ======================================================
-// REFRESH
+// REFRESH EVERYTHING
 // ======================================================
 
 function refreshEverything() {
@@ -583,19 +675,30 @@ function refreshEverything() {
         allTrades
     );
 
+
     updateTradeTable(
         getFilteredTrades()
     );
+
 
     updateWeeklyStats(
         allTrades
     );
 
+
     updateMonthlyStats(
         allTrades
     );
 
+
     drawEquityChart(
+        allTrades
+    );
+
+
+    // PREMIUM
+
+    updatePremiumAnalytics(
         allTrades
     );
 }
@@ -653,25 +756,30 @@ function updateDashboard(
         total
     );
 
+
     setText(
         "wins",
         wins
     );
+
 
     setText(
         "losses",
         losses
     );
 
+
     setText(
         "winRate",
         winRate.toFixed(1) + "%"
     );
 
+
     setText(
         "totalPL",
         totalPL.toFixed(2)
     );
+
 
     setText(
         "averagePL",
@@ -681,7 +789,7 @@ function updateDashboard(
 
 
 // ======================================================
-// TABLE
+// TRADE TABLE
 // ======================================================
 
 function updateTradeTable(
@@ -702,11 +810,11 @@ function updateTradeTable(
 
             <tr>
 
-                <td colspan="14"
-                    class="empty-table">
-
+                <td
+                    colspan="14"
+                    class="empty-table"
+                >
                     No trades found
-
                 </td>
 
             </tr>
@@ -730,12 +838,16 @@ function updateTradeTable(
                 "result-breakeven";
 
 
-            if (trade.result === "Win")
+            if (
+                trade.result === "Win"
+            )
                 resultClass =
                     "result-win";
 
 
-            if (trade.result === "Loss")
+            if (
+                trade.result === "Loss"
+            )
                 resultClass =
                     "result-loss";
 
@@ -803,11 +915,12 @@ function updateTradeTable(
                 </td>
 
                 <td>
-                    ${trade.rr
-                        ? Number(
-                            trade.rr
-                        ).toFixed(2)
-                        : "-"
+                    ${
+                        trade.rr
+                            ? Number(
+                                trade.rr
+                              ).toFixed(2)
+                            : "-"
                     }
                 </td>
 
@@ -819,13 +932,12 @@ function updateTradeTable(
 
                 <td>
 
-                    <span class="result-badge
-                        ${resultClass}">
-
+                    <span
+                        class="result-badge ${resultClass}"
+                    >
                         ${escapeHTML(
                             trade.result || "-"
                         )}
-
                     </span>
 
                 </td>
@@ -850,26 +962,27 @@ function updateTradeTable(
 
                     <button
                         class="delete-btn"
-                        data-id="${trade.id}">
-
+                        data-id="${trade.id}"
+                    >
                         Delete
-
                     </button>
 
                 </td>
+
             `;
 
 
             tradeTableBody.appendChild(
                 row
             );
+
         }
     );
 }
 
 
 // ======================================================
-// DELETE
+// DELETE TRADE
 // ======================================================
 
 tradeTableBody?.addEventListener(
@@ -881,7 +994,9 @@ tradeTableBody?.addEventListener(
                 ".delete-btn"
             );
 
-        if (!button) return;
+
+        if (!button)
+            return;
 
 
         const tradeId =
@@ -910,6 +1025,7 @@ tradeTableBody?.addEventListener(
                 )
             );
 
+
         } catch (error) {
 
             console.error(
@@ -922,6 +1038,7 @@ tradeTableBody?.addEventListener(
                 error.message
             );
         }
+
     }
 );
 
@@ -937,6 +1054,7 @@ searchTrades?.addEventListener(
         updateTradeTable(
             getFilteredTrades()
         );
+
     }
 );
 
@@ -956,40 +1074,40 @@ function getFilteredTrades() {
     return allTrades.filter(
         trade => {
 
-            const searchable =
-                [
+            const searchable = [
 
-                    trade.date,
+                trade.date,
 
-                    trade.time,
+                trade.time,
 
-                    trade.pair,
+                trade.pair,
 
-                    trade.direction,
+                trade.direction,
 
-                    trade.setup,
+                trade.setup,
 
-                    trade.result,
+                trade.result,
 
-                    trade.mistake,
+                trade.mistake,
 
-                    trade.notes
+                trade.notes
 
-                ]
-                .join(" ")
-                .toLowerCase();
+            ]
+            .join(" ")
+            .toLowerCase();
 
 
             return searchable.includes(
                 query
             );
+
         }
     );
 }
 
 
 // ======================================================
-// WEEKLY
+// WEEKLY STATS
 // ======================================================
 
 function updateWeeklyStats(
@@ -1018,8 +1136,12 @@ function updateWeeklyStats(
         start.getDate() - diff
     );
 
+
     start.setHours(
-        0, 0, 0, 0
+        0,
+        0,
+        0,
+        0
     );
 
 
@@ -1039,6 +1161,7 @@ function updateWeeklyStats(
 
 
                 return date >= start;
+
             }
         );
 
@@ -1051,7 +1174,7 @@ function updateWeeklyStats(
 
 
 // ======================================================
-// MONTHLY
+// MONTHLY STATS
 // ======================================================
 
 function updateMonthlyStats(
@@ -1064,6 +1187,7 @@ function updateMonthlyStats(
 
     const year =
         now.getFullYear();
+
 
     const month =
         now.getMonth();
@@ -1086,11 +1210,12 @@ function updateMonthlyStats(
 
                 return (
                     date.getFullYear()
-                        === year
+                    === year
                     &&
                     date.getMonth()
-                        === month
+                    === month
                 );
+
             }
         );
 
@@ -1147,24 +1272,551 @@ function updatePeriodStats(
         trades.length
     );
 
+
     setText(
         prefix + "Wins",
         wins
     );
+
 
     setText(
         prefix + "Losses",
         losses
     );
 
+
     setText(
         prefix + "WinRate",
         winRate.toFixed(1) + "%"
     );
 
+
     setText(
         prefix + "PL",
         pl.toFixed(2)
+    );
+}
+
+
+// ======================================================
+// PREMIUM ANALYTICS
+// ======================================================
+
+function updatePremiumAnalytics(
+    trades
+) {
+
+    updateSetupAnalytics(
+        trades
+    );
+
+
+    updateMistakeAnalytics(
+        trades
+    );
+
+
+    updateAverageRR(
+        trades
+    );
+}
+
+
+// ======================================================
+// SETUP ANALYTICS
+// ======================================================
+
+function updateSetupAnalytics(
+    trades
+) {
+
+    const setupMap =
+        {};
+
+
+    trades.forEach(
+        trade => {
+
+            const setup =
+                trade.setup ||
+                "Unknown";
+
+
+            if (!setupMap[setup]) {
+
+                setupMap[setup] = {
+
+                    trades: 0,
+
+                    wins: 0,
+
+                    losses: 0,
+
+                    pl: 0
+
+                };
+
+            }
+
+
+            setupMap[setup].trades++;
+
+
+            if (
+                trade.result === "Win"
+            ) {
+
+                setupMap[setup].wins++;
+
+            }
+
+
+            if (
+                trade.result === "Loss"
+            ) {
+
+                setupMap[setup].losses++;
+
+            }
+
+
+            setupMap[setup].pl +=
+                Number(
+                    trade.profit || 0
+                );
+
+        }
+    );
+
+
+    const setups =
+        Object.entries(
+            setupMap
+        );
+
+
+    const body =
+        document.getElementById(
+            "setupStatsBody"
+        );
+
+
+    if (!body)
+        return;
+
+
+    body.innerHTML =
+        "";
+
+
+    if (setups.length === 0) {
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="empty-table"
+                >
+                    No setup data yet
+                </td>
+
+            </tr>
+
+        `;
+
+        setText(
+            "bestSetup",
+            "-"
+        );
+
+        setText(
+            "bestSetupWinRate",
+            "Win Rate: -"
+        );
+
+        setText(
+            "bestSetupPL",
+            "0.00"
+        );
+
+        return;
+    }
+
+
+    // Sort by P/L
+
+    setups.sort(
+        (a, b) =>
+            b[1].pl -
+            a[1].pl
+    );
+
+
+    // Best setup
+
+    const best =
+        setups[0];
+
+
+    const bestName =
+        best[0];
+
+
+    const bestData =
+        best[1];
+
+
+    const bestWinRate =
+        bestData.trades > 0
+            ? bestData.wins /
+              bestData.trades *
+              100
+            : 0;
+
+
+    setText(
+        "bestSetup",
+        bestName
+    );
+
+
+    setText(
+        "bestSetupWinRate",
+        "Win Rate: " +
+        bestWinRate.toFixed(1) +
+        "%"
+    );
+
+
+    setText(
+        "bestSetupPL",
+        bestData.pl.toFixed(2)
+    );
+
+
+    // Table
+
+    setups.forEach(
+        ([setup, data]) => {
+
+            const winRate =
+                data.trades > 0
+                    ? data.wins /
+                      data.trades *
+                      100
+                    : 0;
+
+
+            const plClass =
+                data.pl > 0
+                    ? "green"
+                    : data.pl < 0
+                        ? "red"
+                        : "";
+
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    <strong>
+                        ${escapeHTML(
+                            setup
+                        )}
+                    </strong>
+                </td>
+
+                <td>
+                    ${data.trades}
+                </td>
+
+                <td class="green">
+                    ${data.wins}
+                </td>
+
+                <td class="red">
+                    ${data.losses}
+                </td>
+
+                <td>
+                    ${winRate.toFixed(1)}%
+                </td>
+
+                <td class="${plClass}">
+                    ${data.pl.toFixed(2)}
+                </td>
+
+            `;
+
+
+            body.appendChild(
+                row
+            );
+
+        }
+    );
+}
+
+
+// ======================================================
+// MISTAKE ANALYTICS
+// ======================================================
+
+function updateMistakeAnalytics(
+    trades
+) {
+
+    const mistakeMap =
+        {};
+
+
+    trades.forEach(
+        trade => {
+
+            const mistake =
+                trade.mistake ||
+                "No mistake";
+
+
+            if (!mistakeMap[mistake]) {
+
+                mistakeMap[mistake] = {
+
+                    count: 0,
+
+                    wins: 0,
+
+                    losses: 0,
+
+                    pl: 0
+
+                };
+
+            }
+
+
+            mistakeMap[mistake].count++;
+
+
+            if (
+                trade.result === "Win"
+            ) {
+
+                mistakeMap[mistake].wins++;
+
+            }
+
+
+            if (
+                trade.result === "Loss"
+            ) {
+
+                mistakeMap[mistake].losses++;
+
+            }
+
+
+            mistakeMap[mistake].pl +=
+                Number(
+                    trade.profit || 0
+                );
+
+        }
+    );
+
+
+    const mistakes =
+        Object.entries(
+            mistakeMap
+        );
+
+
+    const body =
+        document.getElementById(
+            "mistakeStatsBody"
+        );
+
+
+    if (!body)
+        return;
+
+
+    body.innerHTML =
+        "";
+
+
+    if (mistakes.length === 0) {
+
+        body.innerHTML = `
+
+            <tr>
+
+                <td
+                    colspan="6"
+                    class="empty-table"
+                >
+                    No mistake data yet
+                </td>
+
+            </tr>
+
+        `;
+
+        setText(
+            "commonMistake",
+            "-"
+        );
+
+        setText(
+            "commonMistakeCount",
+            "0 trades"
+        );
+
+        return;
+    }
+
+
+    // Sort by frequency
+
+    mistakes.sort(
+        (a, b) =>
+            b[1].count -
+            a[1].count
+    );
+
+
+    // Most common mistake
+
+    const common =
+        mistakes[0];
+
+
+    setText(
+        "commonMistake",
+        common[0]
+    );
+
+
+    setText(
+        "commonMistakeCount",
+        common[1].count +
+        " trades"
+    );
+
+
+    // Table
+
+    mistakes.forEach(
+        ([mistake, data]) => {
+
+            const winRate =
+                data.count > 0
+                    ? data.wins /
+                      data.count *
+                      100
+                    : 0;
+
+
+            const plClass =
+                data.pl > 0
+                    ? "green"
+                    : data.pl < 0
+                        ? "red"
+                        : "";
+
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    <strong>
+                        ${escapeHTML(
+                            mistake
+                        )}
+                    </strong>
+                </td>
+
+                <td>
+                    ${data.count}
+                </td>
+
+                <td class="green">
+                    ${data.wins}
+                </td>
+
+                <td class="red">
+                    ${data.losses}
+                </td>
+
+                <td>
+                    ${winRate.toFixed(1)}%
+                </td>
+
+                <td class="${plClass}">
+                    ${data.pl.toFixed(2)}
+                </td>
+
+            `;
+
+
+            body.appendChild(
+                row
+            );
+
+        }
+    );
+}
+
+
+// ======================================================
+// AVERAGE R:R
+// ======================================================
+
+function updateAverageRR(
+    trades
+) {
+
+    const validTrades =
+        trades.filter(
+            trade =>
+                Number(
+                    trade.rr
+                ) > 0
+        );
+
+
+    const average =
+        validTrades.length > 0
+
+            ? validTrades.reduce(
+                (sum, trade) =>
+                    sum +
+                    Number(
+                        trade.rr
+                    ),
+                0
+            )
+            /
+            validTrades.length
+
+            : 0;
+
+
+    setText(
+        "averageRR",
+        average.toFixed(2)
     );
 }
 
@@ -1181,6 +1833,7 @@ function drawEquityChart(
         document.getElementById(
             "equityChart"
         );
+
 
     const empty =
         document.getElementById(
@@ -1219,6 +1872,7 @@ function drawEquityChart(
     canvas.width =
         rect.width * dpr;
 
+
     canvas.height =
         290 * dpr;
 
@@ -1238,6 +1892,7 @@ function drawEquityChart(
     const width =
         rect.width;
 
+
     const height =
         290;
 
@@ -1250,24 +1905,25 @@ function drawEquityChart(
     );
 
 
-    // Oldest → newest
-
     const ordered =
-        [...trades]
-            .sort(
-                (a, b) =>
-                    Number(
-                        a.savedAt || 0
-                    ) -
-                    Number(
-                        b.savedAt || 0
-                    )
-            );
+        [...trades].sort(
+            (a, b) =>
+                Number(
+                    a.savedAt || 0
+                )
+                -
+                Number(
+                    b.savedAt || 0
+                )
+        );
 
 
-    let equity = 0;
+    let equity =
+        0;
 
-    const points = [];
+
+    const points =
+        [];
 
 
     ordered.forEach(
@@ -1278,9 +1934,11 @@ function drawEquityChart(
                     trade.profit || 0
                 );
 
+
             points.push(
                 equity
             );
+
         }
     );
 
@@ -1290,6 +1948,7 @@ function drawEquityChart(
             0,
             ...points
         );
+
 
     const max =
         Math.max(
@@ -1321,8 +1980,11 @@ function drawEquityChart(
             20 +
             (
                 height - 40
-            ) *
-            i / 4;
+            )
+            *
+            i
+            /
+            4;
 
 
         ctx.beginPath();
@@ -1338,6 +2000,7 @@ function drawEquityChart(
         );
 
         ctx.stroke();
+
     }
 
 
@@ -1351,14 +2014,21 @@ function drawEquityChart(
 
             const x =
                 points.length === 1
+
                     ? width / 2
-                    : index /
-                      (
+
+                    :
+
+                    index /
+                    (
                         points.length - 1
-                      ) *
-                      (
+                    )
+                    *
+                    (
                         width - 20
-                      ) + 10;
+                    )
+                    +
+                    10;
 
 
             const y =
@@ -1367,17 +2037,30 @@ function drawEquityChart(
                 (
                     (
                         value - min
-                    ) / range
-                ) *
+                    )
+                    /
+                    range
+                )
+                *
                 (
                     height - 40
                 );
 
 
-            if (index === 0)
-                ctx.moveTo(x, y);
+            if (
+                index === 0
+            )
+                ctx.moveTo(
+                    x,
+                    y
+                );
+
             else
-                ctx.lineTo(x, y);
+                ctx.lineTo(
+                    x,
+                    y
+                );
+
         }
     );
 
@@ -1393,7 +2076,9 @@ function drawEquityChart(
 
     // Last point
 
-    if (points.length > 0) {
+    if (
+        points.length > 0
+    ) {
 
         const last =
             points[
@@ -1413,8 +2098,11 @@ function drawEquityChart(
             (
                 (
                     last - min
-                ) / range
-            ) *
+                )
+                /
+                range
+            )
+            *
             (
                 height - 40
             );
@@ -1430,10 +2118,12 @@ function drawEquityChart(
             Math.PI * 2
         );
 
+
         ctx.fillStyle =
             "#7c5cff";
 
         ctx.fill();
+
     }
 }
 
@@ -1461,17 +2151,29 @@ window.exportCSV =
         const headers = [
 
             "Date",
+
             "Time",
+
             "Pair",
+
             "Direction",
+
             "Entry",
+
             "SL",
+
             "TP",
+
             "RR",
+
             "Setup",
+
             "Result",
+
             "Profit/Loss",
+
             "Mistake",
+
             "Notes"
 
         ];
@@ -1482,17 +2184,29 @@ window.exportCSV =
                 trade => [
 
                     trade.date,
+
                     trade.time,
+
                     trade.pair,
+
                     trade.direction,
+
                     trade.entry,
+
                     trade.sl,
+
                     trade.tp,
+
                     trade.rr,
+
                     trade.setup,
+
                     trade.result,
+
                     trade.profit,
+
                     trade.mistake,
+
                     trade.notes
 
                 ].map(
@@ -1509,10 +2223,12 @@ window.exportCSV =
                 headers,
                 ...rows
             ]
+
             .map(
                 row =>
                     row.join(",")
             )
+
             .join("\n");
 
 
@@ -1541,6 +2257,7 @@ window.exportCSV =
         link.href =
             url;
 
+
         link.download =
             "UjR-Fx-Trading-Journal.csv";
 
@@ -1549,7 +2266,9 @@ window.exportCSV =
             link
         );
 
+
         link.click();
+
 
         link.remove();
 
@@ -1557,8 +2276,13 @@ window.exportCSV =
         URL.revokeObjectURL(
             url
         );
+
     };
 
+
+// ======================================================
+// CSV ESCAPE
+// ======================================================
 
 function csvEscape(
     value
@@ -1577,7 +2301,7 @@ function csvEscape(
 
 
 // ======================================================
-// HELPERS
+// SET TEXT
 // ======================================================
 
 function setText(
@@ -1596,6 +2320,10 @@ function setText(
             value;
 }
 
+
+// ======================================================
+// FORMAT NUMBER
+// ======================================================
 
 function formatNumber(
     value
@@ -1623,6 +2351,10 @@ function formatNumber(
 }
 
 
+// ======================================================
+// FORMAT DATE
+// ======================================================
+
 function formatDate(
     dateString
 ) {
@@ -1648,6 +2380,10 @@ function formatDate(
     );
 }
 
+
+// ======================================================
+// ESCAPE HTML
+// ======================================================
 
 function escapeHTML(
     value
@@ -1690,7 +2426,7 @@ function escapeHTML(
 
 
 // ======================================================
-// SCROLL
+// SCROLL TO ADD TRADE
 // ======================================================
 
 window.scrollToTrade =
@@ -1710,12 +2446,14 @@ window.scrollToTrade =
                         "smooth"
                 }
             );
+
         }
+
     };
 
 
 // ======================================================
-// RESPONSIVE CHART
+// RESIZE CHART
 // ======================================================
 
 window.addEventListener(
@@ -1725,6 +2463,7 @@ window.addEventListener(
         drawEquityChart(
             allTrades
         );
+
     }
 );
 
@@ -1734,7 +2473,8 @@ window.addEventListener(
 // ======================================================
 
 if (
-    "serviceWorker" in navigator
+    "serviceWorker"
+    in navigator
 ) {
 
     window.addEventListener(
@@ -1742,13 +2482,17 @@ if (
         () => {
 
             navigator.serviceWorker
-                .register("./sw.js")
+                .register(
+                    "./sw.js"
+                )
+
                 .then(
                     () =>
                         console.log(
                             "UjR Fx Journal PWA ready."
                         )
                 )
+
                 .catch(
                     error =>
                         console.error(
@@ -1756,6 +2500,8 @@ if (
                             error
                         )
                 );
+
         }
     );
+
 }
