@@ -1885,14 +1885,3 @@ function updateAll() {
     updateMonthlyStats();
 
 }
-
-{
-  "name": "UjR Fx Journal",
-  "short_name": "UjR Fx",
-  "description": "Trading Performance Journal",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#0f1115",
-  "theme_color": "#0f1115",
-  "orientation": "portrait"
-}
