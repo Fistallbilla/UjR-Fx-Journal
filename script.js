@@ -1,25 +1,32 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+/* =========================================================
+   UjR Fx Trading Journal
+   Firebase + Firestore
+========================================================= */
 
 import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signOut,
-  onAuthStateChanged
+    initializeApp
+} from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+import {
+    getAuth,
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut,
+    onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
 import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  onSnapshot,
-  query,
-  orderBy
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    collection,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    onSnapshot,
+    query,
+    orderBy
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
 
@@ -28,19 +35,19 @@ import {
 ========================================================= */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAdCB2Vke4iXLm1zPj43cNQwC65gZlQ6Ns",
-  authDomain: "journal-38e0e.firebaseapp.com",
-  databaseURL: "https://journal-38e0e-default-rtdb.firebaseio.com",
-  projectId: "journal-38e0e",
-  storageBucket: "journal-38e0e.firebasestorage.app",
-  messagingSenderId: "382226906837",
-  appId: "1:382226906837:web:38df881c0f7beb24256c5c",
-  measurementId: "G-R6LXDMQ9K2"
+    apiKey: "AIzaSyAdCB2Vke4iXLm1zPj43cNQwC65gZlQ6Ns",
+    authDomain: "journal-38e0e.firebaseapp.com",
+    databaseURL: "https://journal-38e0e-default-rtdb.firebaseio.com",
+    projectId: "journal-38e0e",
+    storageBucket: "journal-38e0e.firebasestorage.app",
+    messagingSenderId: "382226906837",
+    appId: "1:382226906837:web:38df881c0f7beb24256c5c",
+    measurementId: "G-R6LXDMQ9K2"
 };
 
 
 /* =========================================================
-   FIREBASE INIT
+   FIREBASE INITIALIZATION
 ========================================================= */
 
 const app = initializeApp(firebaseConfig);
@@ -49,23 +56,29 @@ const auth = getAuth(app);
 
 const db = getFirestore(app);
 
-const provider = new GoogleAuthProvider();
+const googleProvider = new GoogleAuthProvider();
 
 
 /* =========================================================
-   STATE
+   GLOBAL STATE
 ========================================================= */
 
 let currentUser = null;
 
 let trades = [];
 
-let account = {
-  startingBalance: 0,
-  currency: "USD"
+let unsubscribeTrades = null;
+
+let unsubscribeSettings = null;
+
+let userSettings = {
+    startingBalance: 1000,
+    currency: "USD"
 };
 
-let unsubscribeTrades = null;
+let editingTradeId = null;
+
+let manualLotOverride = false;
 
 let calendarDate = new Date();
 
@@ -80,432 +93,720 @@ const $ = (id) => document.getElementById(id);
 
 
 function number(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
+
+    const n = Number(value);
+
+    return Number.isFinite(n) ? n : 0;
 }
 
 
-function money(value) {
+function escapeHtml(value) {
 
-  const amount = number(value);
-
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: account.currency || "USD",
-    minimumFractionDigits: 2
-  }).format(amount);
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }
 
 
-function moneyClass(value) {
+function todayString() {
 
-  const n = number(value);
+    const date = new Date();
 
-  if (n > 0) return "profit";
+    const year = date.getFullYear();
 
-  if (n < 0) return "loss";
+    const month = String(date.getMonth() + 1).padStart(2, "0");
 
-  return "neutral";
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
 }
 
 
-function escapeHTML(value) {
+function currentTimeString() {
 
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+    const date = new Date();
+
+    const hours = String(date.getHours()).padStart(2, "0");
+
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${hours}:${minutes}`;
 }
 
 
-function getLocalDate() {
+function formatDate(dateString) {
 
-  const d = new Date();
+    if (!dateString) return "—";
 
-  const year = d.getFullYear();
+    const date = new Date(`${dateString}T00:00:00`);
 
-  const month = String(d.getMonth() + 1).padStart(2, "0");
+    if (Number.isNaN(date.getTime())) return dateString;
 
-  const day = String(d.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+    return date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+    });
 }
 
 
-function getLocalTime() {
+function formatMoney(value, currency = userSettings.currency) {
 
-  const d = new Date();
+    const amount = number(value);
 
-  const hours = String(d.getHours()).padStart(2, "0");
+    const symbols = {
+        USD: "$",
+        EUR: "€",
+        GBP: "£",
+        NPR: "रू"
+    };
 
-  const minutes = String(d.getMinutes()).padStart(2, "0");
+    const symbol = symbols[currency] || "$";
 
-  return `${hours}:${minutes}`;
+    const prefix = amount < 0 ? "-" : "";
+
+    return `${prefix}${symbol}${Math.abs(amount).toLocaleString(
+        "en-US",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    )}`;
 }
 
 
-function showToast(message) {
+function formatNumber(value, decimals = 2) {
 
-  const toast = $("toast");
+    return number(value).toLocaleString(
+        "en-US",
+        {
+            minimumFractionDigits: decimals,
+            maximumFractionDigits: decimals
+        }
+    );
+}
 
-  toast.textContent = message;
 
-  toast.classList.add("show");
+function getResultClass(result) {
 
-  clearTimeout(toastTimer);
+    if (result === "Win") return "result-win";
 
-  toastTimer = setTimeout(() => {
+    if (result === "Loss") return "result-loss";
 
-    toast.classList.remove("show");
+    return "result-be";
+}
 
-  }, 2500);
+
+function getDirectionClass(direction) {
+
+    return direction === "Buy"
+        ? "direction-buy"
+        : "direction-sell";
+}
+
+
+function showToast(message, type = "success") {
+
+    const toast = $("toast");
+
+    const icon = $("toastIcon");
+
+    const text = $("toastMessage");
+
+    if (!toast) return;
+
+    text.textContent = message;
+
+    icon.textContent =
+        type === "error"
+            ? "!"
+            : "✓";
+
+    icon.style.color =
+        type === "error"
+            ? "var(--red)"
+            : "var(--green)";
+
+    icon.style.background =
+        type === "error"
+            ? "var(--red-soft)"
+            : "var(--green-soft)";
+
+    toast.classList.add("show");
+
+    clearTimeout(toastTimer);
+
+    toastTimer = setTimeout(() => {
+
+        toast.classList.remove("show");
+
+    }, 2800);
+}
+
+
+function getUserDocRef() {
+
+    return doc(db, "users", currentUser.uid);
+
+}
+
+
+function getTradesCollection() {
+
+    return collection(
+        db,
+        "users",
+        currentUser.uid,
+        "trades"
+    );
+
 }
 
 
 /* =========================================================
-   LOGIN
+   AUTHENTICATION
 ========================================================= */
 
 $("loginBtn").addEventListener("click", async () => {
 
-  $("loginError").textContent = "";
+    $("loginError").textContent = "";
 
-  try {
+    try {
 
-    await signInWithPopup(auth, provider);
+        await signInWithPopup(
+            auth,
+            googleProvider
+        );
 
-  } catch (error) {
+    } catch (error) {
 
-    console.error(error);
+        console.error(error);
 
-    $("loginError").textContent =
-      error.message || "Login failed.";
+        $("loginError").textContent =
+            getFirebaseErrorMessage(error);
 
-  }
+    }
 
 });
 
-
-/* =========================================================
-   LOGOUT
-========================================================= */
 
 $("logoutBtn").addEventListener("click", async () => {
 
-  try {
+    try {
 
-    await signOut(auth);
+        await signOut(auth);
 
-  } catch (error) {
+    } catch (error) {
 
-    console.error(error);
+        console.error(error);
 
-    showToast("Logout failed.");
+        showToast(
+            "Unable to logout.",
+            "error"
+        );
 
-  }
+    }
 
 });
 
 
-/* =========================================================
-   USER UI
-========================================================= */
+function getFirebaseErrorMessage(error) {
 
-function renderUser() {
+    const code = error?.code || "";
 
-  if (!currentUser) return;
+    const messages = {
 
-  $("userName").textContent =
-    currentUser.displayName || "Trader";
+        "auth/popup-closed-by-user":
+            "Login window was closed.",
 
-  $("userEmail").textContent =
-    currentUser.email || "";
+        "auth/popup-blocked":
+            "Your browser blocked the login popup.",
 
-  if (currentUser.photoURL) {
+        "auth/cancelled-popup-request":
+            "Login request was cancelled.",
 
-    $("userPhoto").src = currentUser.photoURL;
+        "auth/unauthorized-domain":
+            "This website domain is not authorized in Firebase.",
 
-  }
+        "auth/operation-not-allowed":
+            "Google login is not enabled in Firebase.",
+
+        "auth/api-key-not-valid":
+            "Firebase API key is invalid. Copy the current Web App config from Firebase Console."
+
+    };
+
+    return messages[code] ||
+        error?.message ||
+        "Login failed.";
+}
+
+
+onAuthStateChanged(auth, async (user) => {
+
+    if (user) {
+
+        currentUser = user;
+
+        await showApp();
+
+    } else {
+
+        currentUser = null;
+
+        showLogin();
+
+    }
+
+});
+
+
+async function showApp() {
+
+    $("loginScreen").classList.add("hidden");
+
+    $("app").classList.remove("hidden");
+
+    updateUserUI();
+
+    updateCurrentDate();
+
+    await loadSettings();
+
+    subscribeToTrades();
+
+    navigateTo("dashboardPage");
+
+}
+
+
+function showLogin() {
+
+    $("app").classList.add("hidden");
+
+    $("loginScreen").classList.remove("hidden");
+
+    if (unsubscribeTrades) {
+
+        unsubscribeTrades();
+
+        unsubscribeTrades = null;
+
+    }
+
+    if (unsubscribeSettings) {
+
+        unsubscribeSettings();
+
+        unsubscribeSettings = null;
+
+    }
+
+}
+
+
+function updateUserUI() {
+
+    if (!currentUser) return;
+
+    $("userName").textContent =
+        currentUser.displayName ||
+        "Trader";
+
+    $("userEmail").textContent =
+        currentUser.email ||
+        "—";
+
+    $("userPhoto").src =
+        currentUser.photoURL ||
+        "logo.png";
+
+}
+
+
+function updateCurrentDate() {
+
+    const now = new Date();
+
+    $("currentDate").textContent =
+        now.toLocaleDateString(
+            "en-US",
+            {
+                weekday: "short",
+                month: "short",
+                day: "numeric"
+            }
+        );
 
 }
 
 
 /* =========================================================
-   ACCOUNT
+   SETTINGS
 ========================================================= */
 
-async function loadAccount() {
+async function loadSettings() {
 
-  if (!currentUser) return;
+    if (!currentUser) return;
 
-  try {
+    try {
 
-    const ref = doc(
-      db,
-      "users",
-      currentUser.uid,
-      "settings",
-      "account"
-    );
+        const snapshot =
+            await getDoc(
+                getUserDocRef()
+            );
 
-    const snap = await getDoc(ref);
+        if (snapshot.exists()) {
 
-    if (snap.exists()) {
+            const data = snapshot.data();
 
-      account = {
-        ...account,
-        ...snap.data()
-      };
+            userSettings = {
+
+                startingBalance:
+                    number(data.startingBalance) || 1000,
+
+                currency:
+                    data.currency || "USD"
+
+            };
+
+        } else {
+
+            userSettings = {
+                startingBalance: 1000,
+                currency: "USD"
+            };
+
+            await setDoc(
+                getUserDocRef(),
+                userSettings,
+                { merge: true }
+            );
+
+        }
+
+        populateSettings();
+
+    } catch (error) {
+
+        console.error(
+            "Settings error:",
+            error
+        );
 
     }
+
+}
+
+
+function populateSettings() {
 
     $("startingBalance").value =
-      account.startingBalance || "";
+        userSettings.startingBalance;
 
     $("currency").value =
-      account.currency || "USD";
+        userSettings.currency;
 
-    updateDashboard();
-
-  } catch (error) {
-
-    console.error("Account load error:", error);
-
-  }
+    $("calcBalance").value =
+        userSettings.startingBalance;
 
 }
 
 
-$("saveSettingsBtn").addEventListener("click", async () => {
+$("saveSettingsBtn").addEventListener(
+    "click",
+    async () => {
 
-  if (!currentUser) return;
+        if (!currentUser) return;
 
-  const startingBalance =
-    number($("startingBalance").value);
+        const balance =
+            number(
+                $("startingBalance").value
+            );
 
-  const currency =
-    $("currency").value || "USD";
+        const currency =
+            $("currency").value;
 
-  account = {
-    startingBalance,
-    currency
-  };
+        if (balance < 0) {
 
-  try {
+            showToast(
+                "Starting balance cannot be negative.",
+                "error"
+            );
 
-    await setDoc(
-      doc(
-        db,
-        "users",
-        currentUser.uid,
-        "settings",
-        "account"
-      ),
-      account
+            return;
+
+        }
+
+        try {
+
+            userSettings = {
+                startingBalance: balance,
+                currency
+            };
+
+            await setDoc(
+                getUserDocRef(),
+                userSettings,
+                { merge: true }
+            );
+
+            $("calcBalance").value = balance;
+
+            renderEverything();
+
+            showToast(
+                "Settings saved."
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            showToast(
+                "Could not save settings.",
+                "error"
+            );
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   TRADES SUBSCRIPTION
+========================================================= */
+
+function subscribeToTrades() {
+
+    if (!currentUser) return;
+
+    if (unsubscribeTrades) {
+
+        unsubscribeTrades();
+
+    }
+
+    const tradesRef =
+        getTradesCollection();
+
+    const tradesQuery =
+        query(
+            tradesRef,
+            orderBy(
+                "createdAt",
+                "desc"
+            )
+        );
+
+    unsubscribeTrades =
+        onSnapshot(
+            tradesQuery,
+            (snapshot) => {
+
+                trades =
+                    snapshot.docs.map(
+                        item => ({
+                            id: item.id,
+                            ...item.data()
+                        })
+                    );
+
+                renderEverything();
+
+            },
+            (error) => {
+
+                console.error(
+                    "Trade listener:",
+                    error
+                );
+
+                showToast(
+                    "Could not load trades.",
+                    "error"
+                );
+
+            }
+        );
+
+}
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+const navItems =
+    document.querySelectorAll(
+        ".nav-item"
     );
 
-    updateDashboard();
 
-    showToast("Settings saved.");
+navItems.forEach(item => {
 
-  } catch (error) {
+    item.addEventListener(
+        "click",
+        () => {
 
-    console.error(error);
+            const page =
+                item.dataset.page;
 
-    showToast("Could not save settings.");
+            navigateTo(page);
 
-  }
+        }
+    );
 
 });
 
 
-/* =========================================================
-   FIRESTORE TRADE LISTENER
-========================================================= */
+document.querySelectorAll(
+    "[data-page-target]"
+).forEach(button => {
 
-function startTradeListener() {
+    button.addEventListener(
+        "click",
+        () => {
 
-  if (!currentUser) return;
+            navigateTo(
+                button.dataset.pageTarget
+            );
 
-  if (unsubscribeTrades) {
+        }
+    );
 
-    unsubscribeTrades();
-
-    unsubscribeTrades = null;
-
-  }
-
-  const tradesRef = collection(
-    db,
-    "users",
-    currentUser.uid,
-    "trades"
-  );
-
-  const q = query(
-    tradesRef,
-    orderBy("createdAt", "desc")
-  );
-
-  unsubscribeTrades = onSnapshot(
-    q,
-    (snapshot) => {
-
-      trades = snapshot.docs.map((docSnap) => ({
-
-        id: docSnap.id,
-
-        ...docSnap.data()
-
-      }));
-
-      renderEverything();
-
-    },
-
-    (error) => {
-
-      console.error("Trade listener error:", error);
-
-      /*
-       If Firestore says "Missing or insufficient permissions",
-       check your Firestore security rules.
-      */
-
-      showToast("Could not load trades.");
-
-    }
-  );
-
-}
+});
 
 
-/* =========================================================
-   CALCULATE R:R
-========================================================= */
+function navigateTo(pageId) {
 
-function calculateTradeRR() {
+    document.querySelectorAll(
+        ".page"
+    ).forEach(page => {
 
-  const entry = number($("entry").value);
+        page.classList.remove(
+            "active-page"
+        );
 
-  const sl = number($("sl").value);
-
-  const tp = number($("tp").value);
-
-  const direction = $("direction").value;
+    });
 
 
-  if (entry <= 0 || sl <= 0 || tp <= 0) {
+    const page = $(pageId);
 
-    $("rr").value = "";
+    if (!page) return;
 
-    return 0;
-
-  }
-
-
-  let risk = 0;
-
-  let reward = 0;
+    page.classList.add(
+        "active-page"
+    );
 
 
-  if (direction === "Buy") {
+    navItems.forEach(item => {
 
-    risk = entry - sl;
+        item.classList.toggle(
+            "active",
+            item.dataset.page === pageId
+        );
 
-    reward = tp - entry;
-
-  } else {
-
-    risk = sl - entry;
-
-    reward = entry - tp;
-
-  }
+    });
 
 
-  if (risk <= 0 || reward <= 0) {
+    const titles = {
 
-    $("rr").value = "Invalid";
+        dashboardPage: [
+            "TRADING DESK",
+            "Dashboard"
+        ],
 
-    return 0;
+        journalPage: [
+            "TRADE DATABASE",
+            "Trading Journal"
+        ],
 
-  }
+        analyticsPage: [
+            "DATA & INSIGHTS",
+            "Analytics"
+        ],
+
+        riskPage: [
+            "POSITION PLANNING",
+            "Risk Calculator"
+        ],
+
+        calendarPage: [
+            "PERFORMANCE CALENDAR",
+            "Trading Calendar"
+        ],
+
+        settingsPage: [
+            "ACCOUNT CONFIGURATION",
+            "Settings"
+        ]
+
+    };
 
 
-  const rr = reward / risk;
+    const title =
+        titles[pageId] ||
+        ["TRADING DESK", "Dashboard"];
 
-  $("rr").value = `1:${rr.toFixed(2)}`;
 
-  return rr;
+    $("pageEyebrow").textContent =
+        title[0];
+
+    $("pageTitle").textContent =
+        title[1];
+
+
+    closeSidebar();
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
 
 }
 
 
 /* =========================================================
-   AUTO RISK / LOT
+   MOBILE SIDEBAR
 ========================================================= */
 
-function calculateTradeRisk() {
-
-  const balance =
-    number(account.startingBalance);
-
-  const riskPercent =
-    number($("riskPercent").value);
-
-  const entry =
-    number($("entry").value);
-
-  const sl =
-    number($("sl").value);
+$("mobileMenuBtn").addEventListener(
+    "click",
+    openSidebar
+);
 
 
-  const riskAmount =
-    balance * riskPercent / 100;
+$("mobileCloseBtn").addEventListener(
+    "click",
+    closeSidebar
+);
 
 
-  $("riskAmount").value =
-    riskAmount > 0
-      ? riskAmount.toFixed(2)
-      : "";
+$("overlay").addEventListener(
+    "click",
+    closeSidebar
+);
 
 
-  if (entry <= 0 || sl <= 0 || riskAmount <= 0) {
+function openSidebar() {
 
-    return;
+    $("sidebar").classList.add("open");
 
-  }
+    $("overlay").classList.add("show");
 
-
-  const distance =
-    Math.abs(entry - sl);
+}
 
 
-  /*
-    Simplified XAUUSD assumption:
+function closeSidebar() {
 
-    1 lot = 100 oz.
+    $("sidebar").classList.remove("open");
 
-    Exact lot sizing depends on broker
-    contract size / tick value.
-  */
-
-  const lot =
-    riskAmount / (distance * 100);
-
-
-  if (
-    !$("lotSize").dataset.manual ||
-    $("lotSize").dataset.manual !== "true"
-  ) {
-
-    $("lotSize").value =
-      Math.max(0, lot).toFixed(2);
-
-  }
+    $("overlay").classList.remove("show");
 
 }
 
@@ -514,366 +815,637 @@ function calculateTradeRisk() {
    TRADE MODAL
 ========================================================= */
 
-function openTradeModal(trade = null) {
+$("quickAddBtn").addEventListener(
+    "click",
+    openAddTradeModal
+);
 
-  $("tradeError").textContent = "";
 
-  $("tradeModal").classList.remove("hidden");
+$("journalAddBtn").addEventListener(
+    "click",
+    openAddTradeModal
+);
 
-  if (trade) {
 
-    $("modalTitle").textContent = "Edit Trade";
+$("mobileAddBtn").addEventListener(
+    "click",
+    openAddTradeModal
+);
 
-    fillTradeForm(trade);
 
-  } else {
+$("closeModal").addEventListener(
+    "click",
+    closeTradeModal
+);
 
-    $("modalTitle").textContent = "Add Trade";
 
-    resetTradeForm();
+$("cancelTrade").addEventListener(
+    "click",
+    closeTradeModal
+);
 
-  }
+
+$("tradeModal").querySelector(
+    ".modal-backdrop"
+).addEventListener(
+    "click",
+    closeTradeModal
+);
+
+
+function openAddTradeModal() {
+
+    editingTradeId = null;
+
+    manualLotOverride = false;
+
+    $("tradeForm").reset();
+
+    $("modalTitle").textContent =
+        "Add Trade";
+
+    $("tradeId").value = "";
+
+    $("tradeDate").value =
+        todayString();
+
+    $("tradeTime").value =
+        currentTimeString();
+
+    $("pair").value =
+        "XAUUSD";
+
+    $("direction").value =
+        "Buy";
+
+    $("riskPercent").value =
+        "1";
+
+    $("result").value =
+        "Win";
+
+    $("riskAmount").value =
+        calculateRiskAmount();
+
+    $("lotSize").value = "";
+
+    $("rr").value = "";
+
+    $("tradeError").textContent = "";
+
+    $("tradeModal").classList.remove(
+        "hidden"
+    );
+
+    setTimeout(() => {
+
+        $("entry").focus();
+
+    }, 100);
 
 }
 
 
 function closeTradeModal() {
 
-  $("tradeModal").classList.add("hidden");
-
-  $("tradeForm").reset();
-
-  $("tradeId").value = "";
-
-  $("lotSize").dataset.manual = "false";
+    $("tradeModal").classList.add(
+        "hidden"
+    );
 
 }
-
-
-function resetTradeForm() {
-
-  $("tradeForm").reset();
-
-  $("tradeId").value = "";
-
-  $("tradeDate").value = getLocalDate();
-
-  $("tradeTime").value = getLocalTime();
-
-  $("pair").value = "XAUUSD";
-
-  $("direction").value = "Buy";
-
-  $("riskPercent").value = "1";
-
-  $("result").value = "Win";
-
-  $("lotSize").value = "";
-
-  $("lotSize").dataset.manual = "false";
-
-  $("rr").value = "";
-
-  $("riskAmount").value = "";
-
-}
-
-
-function fillTradeForm(trade) {
-
-  $("tradeId").value = trade.id || "";
-
-  $("tradeDate").value = trade.date || "";
-
-  $("tradeTime").value = trade.time || "";
-
-  $("pair").value = trade.pair || "XAUUSD";
-
-  $("direction").value = trade.direction || "Buy";
-
-  $("entry").value = trade.entry ?? "";
-
-  $("sl").value = trade.sl ?? "";
-
-  $("tp").value = trade.tp ?? "";
-
-  $("rr").value = trade.rr || "";
-
-  $("riskPercent").value = trade.riskPercent ?? 1;
-
-  $("riskAmount").value = trade.riskAmount ?? "";
-
-  $("lotSize").value = trade.lotSize ?? "";
-
-  $("lotSize").dataset.manual = "true";
-
-  $("setup").value = trade.setup || "";
-
-  $("session").value = trade.session || "";
-
-  $("htfBias").value = trade.htfBias || "";
-
-  $("liquidity").value = trade.liquidity || "";
-
-  $("confirmation").value = trade.confirmation || "";
-
-  $("result").value = trade.result || "Win";
-
-  $("profitLoss").value = trade.profitLoss ?? "";
-
-  $("confidence").value = trade.confidence || "";
-
-  $("psychology").value = trade.psychology || "";
-
-  $("mistake").value = trade.mistake || "";
-
-  $("notes").value = trade.notes || "";
-
-}
-
-
-$("closeModal").addEventListener(
-  "click",
-  closeTradeModal
-);
-
-
-$("cancelTrade").addEventListener(
-  "click",
-  closeTradeModal
-);
-
-
-$("tradeModal").addEventListener("click", (event) => {
-
-  if (event.target === $("tradeModal")) {
-
-    closeTradeModal();
-
-  }
-
-});
 
 
 /* =========================================================
-   TRADE FORM EVENTS
+   TRADE CALCULATIONS
 ========================================================= */
 
+function calculateTradeRR() {
+
+    const entry =
+        number($("entry").value);
+
+    const sl =
+        number($("sl").value);
+
+    const tp =
+        number($("tp").value);
+
+    const direction =
+        $("direction").value;
+
+
+    if (
+        entry <= 0 ||
+        sl <= 0 ||
+        tp <= 0
+    ) {
+
+        $("rr").value = "";
+
+        return 0;
+
+    }
+
+
+    let risk = 0;
+
+    let reward = 0;
+
+
+    if (direction === "Buy") {
+
+        risk = entry - sl;
+
+        reward = tp - entry;
+
+    } else {
+
+        risk = sl - entry;
+
+        reward = entry - tp;
+
+    }
+
+
+    if (
+        risk <= 0 ||
+        reward <= 0
+    ) {
+
+        $("rr").value =
+            "Invalid";
+
+        return 0;
+
+    }
+
+
+    const rr =
+        reward / risk;
+
+
+    $("rr").value =
+        `1:${rr.toFixed(2)}`;
+
+
+    return rr;
+
+}
+
+
+function calculateRiskAmount() {
+
+    const balance =
+        userSettings.startingBalance;
+
+    const riskPercent =
+        number(
+            $("riskPercent")?.value
+        ) || 0;
+
+    return balance *
+        riskPercent /
+        100;
+
+}
+
+
+function calculateAutoLot() {
+
+    const entry =
+        number($("entry").value);
+
+    const sl =
+        number($("sl").value);
+
+    const riskAmount =
+        number($("riskAmount").value);
+
+    if (
+        entry <= 0 ||
+        sl <= 0 ||
+        riskAmount <= 0
+    ) {
+
+        return 0;
+
+    }
+
+
+    const distance =
+        Math.abs(entry - sl);
+
+
+    if (distance <= 0) {
+
+        return 0;
+
+    }
+
+
+    /*
+        Simplified XAUUSD calculation:
+        1 standard lot = approximately 100 oz.
+
+        lot = risk amount / (SL distance × 100)
+    */
+
+    const lot =
+        riskAmount /
+        (distance * 100);
+
+
+    return lot;
+
+}
+
+
+function updateTradeCalculations() {
+
+    const riskAmount =
+        calculateRiskAmount();
+
+
+    $("riskAmount").value =
+        riskAmount > 0
+            ? riskAmount.toFixed(2)
+            : "";
+
+
+    calculateTradeRR();
+
+
+    if (!manualLotOverride) {
+
+        const lot =
+            calculateAutoLot();
+
+        $("lotSize").value =
+            lot > 0
+                ? lot.toFixed(2)
+                : "";
+
+    }
+
+}
+
+
 [
-  "entry",
-  "sl",
-  "tp",
-  "direction"
-].forEach((id) => {
+    "entry",
+    "sl",
+    "tp",
+    "direction",
+    "riskPercent"
+].forEach(id => {
 
-  $(id).addEventListener("input", () => {
+    $(id).addEventListener(
+        "input",
+        updateTradeCalculations
+    );
 
-    calculateTradeRR();
-
-    calculateTradeRisk();
-
-  });
-
-  $(id).addEventListener("change", () => {
-
-    calculateTradeRR();
-
-    calculateTradeRisk();
-
-  });
+    $(id).addEventListener(
+        "change",
+        updateTradeCalculations
+    );
 
 });
 
 
-$("riskPercent").addEventListener(
-  "input",
-  calculateTradeRisk
+$("lotSize").addEventListener(
+    "input",
+    () => {
+
+        manualLotOverride =
+            $("lotSize").value !== "";
+
+    }
 );
-
-
-$("lotSize").addEventListener("input", () => {
-
-  $("lotSize").dataset.manual = "true";
-
-});
 
 
 /* =========================================================
    SAVE TRADE
 ========================================================= */
 
-$("tradeForm").addEventListener("submit", async (event) => {
+$("tradeForm").addEventListener(
+    "submit",
+    async (event) => {
 
-  event.preventDefault();
+        event.preventDefault();
 
-  if (!currentUser) {
+        $("tradeError").textContent = "";
 
-    $("tradeError").textContent =
-      "Please login first.";
-
-    return;
-
-  }
+        if (!currentUser) return;
 
 
-  $("tradeError").textContent = "";
+        const entry =
+            number($("entry").value);
+
+        const sl =
+            number($("sl").value);
+
+        const tp =
+            number($("tp").value);
+
+        const direction =
+            $("direction").value;
+
+        const riskPercent =
+            number($("riskPercent").value);
 
 
-  const id = $("tradeId").value;
+        if (
+            entry <= 0 ||
+            sl <= 0 ||
+            tp <= 0
+        ) {
+
+            $("tradeError").textContent =
+                "Please enter valid Entry, SL and TP values.";
+
+            return;
+
+        }
 
 
-  const entry = number($("entry").value);
+        let riskDistance;
 
-  const sl = number($("sl").value);
-
-  const tp = number($("tp").value);
+        let rewardDistance;
 
 
-  if (entry <= 0 || sl <= 0 || tp <= 0) {
+        if (direction === "Buy") {
 
-    $("tradeError").textContent =
-      "Enter valid Entry, SL and TP.";
+            riskDistance =
+                entry - sl;
 
-    return;
+            rewardDistance =
+                tp - entry;
 
-  }
+        } else {
+
+            riskDistance =
+                sl - entry;
+
+            rewardDistance =
+                entry - tp;
+
+        }
 
 
-  const rrValue =
+        if (
+            riskDistance <= 0 ||
+            rewardDistance <= 0
+        ) {
+
+            $("tradeError").textContent =
+                "Your SL/TP does not match the selected direction.";
+
+            return;
+
+        }
+
+
+        const rr =
+            rewardDistance /
+            riskDistance;
+
+
+        const riskAmount =
+            userSettings.startingBalance *
+            riskPercent /
+            100;
+
+
+        const lot =
+            number(
+                $("lotSize").value
+            ) ||
+            calculateAutoLot();
+
+
+        const profitLoss =
+            number(
+                $("profitLoss").value
+            );
+
+
+        const tradeData = {
+
+            date:
+                $("tradeDate").value,
+
+            time:
+                $("tradeTime").value,
+
+            pair:
+                $("pair").value,
+
+            direction,
+
+            entry,
+
+            sl,
+
+            tp,
+
+            rr,
+
+            riskPercent,
+
+            riskAmount,
+
+            lotSize:
+                lot,
+
+            setup:
+                $("setup").value,
+
+            session:
+                $("session").value,
+
+            htfBias:
+                $("htfBias").value,
+
+            liquidity:
+                $("liquidity").value,
+
+            confirmation:
+                $("confirmation").value,
+
+            result:
+                $("result").value,
+
+            profitLoss,
+
+            confidence:
+                $("confidence").value,
+
+            psychology:
+                $("psychology").value,
+
+            mistake:
+                $("mistake").value,
+
+            notes:
+                $("notes").value,
+
+            updatedAt:
+                Date.now()
+
+        };
+
+
+        try {
+
+            if (editingTradeId) {
+
+                await updateDoc(
+                    doc(
+                        db,
+                        "users",
+                        currentUser.uid,
+                        "trades",
+                        editingTradeId
+                    ),
+                    tradeData
+                );
+
+                showToast(
+                    "Trade updated."
+                );
+
+            } else {
+
+                tradeData.createdAt =
+                    Date.now();
+
+                await addDoc(
+                    getTradesCollection(),
+                    tradeData
+                );
+
+                showToast(
+                    "Trade added."
+                );
+
+            }
+
+
+            closeTradeModal();
+
+        } catch (error) {
+
+            console.error(error);
+
+            $("tradeError").textContent =
+                "Could not save the trade.";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   EDIT TRADE
+========================================================= */
+
+function editTrade(id) {
+
+    const trade =
+        trades.find(
+            item => item.id === id
+        );
+
+    if (!trade) return;
+
+
+    editingTradeId = id;
+
+    manualLotOverride = true;
+
+
+    $("modalTitle").textContent =
+        "Edit Trade";
+
+
+    $("tradeId").value =
+        id;
+
+
+    $("tradeDate").value =
+        trade.date || todayString();
+
+    $("tradeTime").value =
+        trade.time || "";
+
+    $("pair").value =
+        trade.pair || "XAUUSD";
+
+    $("direction").value =
+        trade.direction || "Buy";
+
+    $("entry").value =
+        trade.entry ?? "";
+
+    $("sl").value =
+        trade.sl ?? "";
+
+    $("tp").value =
+        trade.tp ?? "";
+
+    $("riskPercent").value =
+        trade.riskPercent ?? 1;
+
+    $("riskAmount").value =
+        trade.riskAmount ?? "";
+
+    $("lotSize").value =
+        trade.lotSize ?? "";
+
+    $("setup").value =
+        trade.setup || "";
+
+    $("session").value =
+        trade.session || "";
+
+    $("htfBias").value =
+        trade.htfBias || "";
+
+    $("liquidity").value =
+        trade.liquidity || "";
+
+    $("confirmation").value =
+        trade.confirmation || "";
+
+    $("result").value =
+        trade.result || "Win";
+
+    $("profitLoss").value =
+        trade.profitLoss ?? "";
+
+    $("confidence").value =
+        trade.confidence || "";
+
+    $("psychology").value =
+        trade.psychology || "";
+
+    $("mistake").value =
+        trade.mistake || "";
+
+    $("notes").value =
+        trade.notes || "";
+
+
     calculateTradeRR();
 
 
-  if (rrValue <= 0) {
+    $("tradeError").textContent = "";
 
-    $("tradeError").textContent =
-      "Invalid trade direction or SL/TP.";
+    $("tradeModal").classList.remove(
+        "hidden"
+    );
 
-    return;
-
-  }
-
-
-  const riskPercent =
-    number($("riskPercent").value);
-
-
-  const riskAmount =
-    number($("riskAmount").value);
-
-
-  const lotSize =
-    number($("lotSize").value);
-
-
-  const profitLoss =
-    number($("profitLoss").value);
-
-
-  const trade = {
-
-    date: $("tradeDate").value,
-
-    time: $("tradeTime").value,
-
-    pair: $("pair").value.trim().toUpperCase(),
-
-    direction: $("direction").value,
-
-    entry,
-
-    sl,
-
-    tp,
-
-    rr: rrValue,
-
-    riskPercent,
-
-    riskAmount,
-
-    lotSize,
-
-    setup: $("setup").value.trim(),
-
-    session: $("session").value,
-
-    htfBias: $("htfBias").value,
-
-    liquidity: $("liquidity").value.trim(),
-
-    confirmation: $("confirmation").value.trim(),
-
-    result: $("result").value,
-
-    profitLoss,
-
-    confidence: $("confidence").value,
-
-    psychology: $("psychology").value.trim(),
-
-    mistake: $("mistake").value.trim(),
-
-    notes: $("notes").value.trim(),
-
-    updatedAt: Date.now()
-
-  };
-
-
-  try {
-
-    if (id) {
-
-      await updateDoc(
-
-        doc(
-          db,
-          "users",
-          currentUser.uid,
-          "trades",
-          id
-        ),
-
-        trade
-
-      );
-
-      showToast("Trade updated.");
-
-    } else {
-
-      trade.createdAt = Date.now();
-
-      await addDoc(
-
-        collection(
-          db,
-          "users",
-          currentUser.uid,
-          "trades"
-        ),
-
-        trade
-
-      );
-
-      showToast("Trade added.");
-
-    }
-
-
-    closeTradeModal();
-
-  } catch (error) {
-
-    console.error(error);
-
-    $("tradeError").textContent =
-      error.message || "Could not save trade.";
-
-  }
-
-});
+}
 
 
 /* =========================================================
@@ -882,88 +1454,135 @@ $("tradeForm").addEventListener("submit", async (event) => {
 
 async function deleteTrade(id) {
 
-  if (!currentUser || !id) return;
+    const trade =
+        trades.find(
+            item => item.id === id
+        );
 
-  const confirmed =
-    confirm("Delete this trade?");
-
-  if (!confirmed) return;
+    if (!trade) return;
 
 
-  try {
+    const confirmed =
+        window.confirm(
+            `Delete the ${trade.pair || "trade"} from ${formatDate(trade.date)}?`
+        );
 
-    await deleteDoc(
 
-      doc(
-        db,
-        "users",
-        currentUser.uid,
-        "trades",
-        id
-      )
+    if (!confirmed) return;
 
-    );
 
-    showToast("Trade deleted.");
+    try {
 
-  } catch (error) {
+        await deleteDoc(
+            doc(
+                db,
+                "users",
+                currentUser.uid,
+                "trades",
+                id
+            )
+        );
 
-    console.error(error);
+        showToast(
+            "Trade deleted."
+        );
 
-    showToast("Could not delete trade.");
+    } catch (error) {
 
-  }
+        console.error(error);
+
+        showToast(
+            "Could not delete trade.",
+            "error"
+        );
+
+    }
 
 }
 
 
 /* =========================================================
-   STATS
+   FILTERS
 ========================================================= */
 
-function getStats(list = trades) {
+[
+    "filterResult",
+    "filterPair",
+    "filterDate"
+].forEach(id => {
 
-  const wins =
-    list.filter(t => t.result === "Win").length;
-
-  const losses =
-    list.filter(t => t.result === "Loss").length;
-
-  const be =
-    list.filter(t => t.result === "BE").length;
-
-  const pl =
-    list.reduce(
-      (sum, t) => sum + number(t.profitLoss),
-      0
+    $(id).addEventListener(
+        "input",
+        renderJournal
     );
 
-  const closed =
-    wins + losses;
+    $(id).addEventListener(
+        "change",
+        renderJournal
+    );
 
-  const winRate =
-    closed > 0
-      ? wins / closed * 100
-      : 0;
+});
 
-  const rrValues =
-    list
-      .map(t => number(t.rr))
-      .filter(n => n > 0);
 
-  const avgRR =
-    rrValues.length
-      ? rrValues.reduce((a,b) => a+b,0) / rrValues.length
-      : 0;
+$("clearFilters").addEventListener(
+    "click",
+    () => {
 
-  return {
-    wins,
-    losses,
-    be,
-    pl,
-    winRate,
-    avgRR
-  };
+        $("filterResult").value = "";
+
+        $("filterPair").value = "";
+
+        $("filterDate").value = "";
+
+        renderJournal();
+
+    }
+);
+
+
+function getFilteredTrades() {
+
+    const result =
+        $("filterResult").value;
+
+    const pair =
+        $("filterPair").value;
+
+    const date =
+        $("filterDate").value;
+
+
+    return trades.filter(
+        trade => {
+
+            if (
+                result &&
+                trade.result !== result
+            ) {
+                return false;
+            }
+
+
+            if (
+                pair &&
+                trade.pair !== pair
+            ) {
+                return false;
+            }
+
+
+            if (
+                date &&
+                trade.date !== date
+            ) {
+                return false;
+            }
+
+
+            return true;
+
+        }
+    );
 
 }
 
@@ -972,32 +1591,222 @@ function getStats(list = trades) {
    DASHBOARD
 ========================================================= */
 
-function updateDashboard() {
+function renderDashboard() {
 
-  const stats = getStats();
-
-  $("totalTrades").textContent =
-    trades.length;
-
-  $("winRate").textContent =
-    `${stats.winRate.toFixed(1)}%`;
-
-  $("totalPL").textContent =
-    money(stats.pl);
-
-  $("totalPL").className =
-    moneyClass(stats.pl);
+    const total =
+        trades.length;
 
 
-  const balance =
-    number(account.startingBalance) +
-    stats.pl;
-
-  $("currentBalance").textContent =
-    money(balance);
+    const wins =
+        trades.filter(
+            t => t.result === "Win"
+        ).length;
 
 
-  renderRecentTrades();
+    const losses =
+        trades.filter(
+            t => t.result === "Loss"
+        ).length;
+
+
+    const breakevens =
+        trades.filter(
+            t => t.result === "Breakeven"
+        ).length;
+
+
+    const totalPL =
+        trades.reduce(
+            (sum, trade) =>
+                sum + number(trade.profitLoss),
+            0
+        );
+
+
+    const winRate =
+        total > 0
+            ? wins / total * 100
+            : 0;
+
+
+    const starting =
+        number(
+            userSettings.startingBalance
+        );
+
+
+    const currentBalance =
+        starting + totalPL;
+
+
+    $("totalTrades").textContent =
+        total;
+
+
+    $("dashboardWins").textContent =
+        wins;
+
+
+    $("dashboardLosses").textContent =
+        losses;
+
+
+    $("winRate").textContent =
+        `${winRate.toFixed(1)}%`;
+
+
+    $("totalPL").textContent =
+        formatMoney(totalPL);
+
+
+    $("currentBalance").textContent =
+        formatMoney(currentBalance);
+
+
+    $("balanceChange").textContent =
+        formatMoney(totalPL);
+
+
+    $("balanceChange").className =
+        totalPL > 0
+            ? "positive"
+            : totalPL < 0
+                ? "negative"
+                : "neutral-text";
+
+
+    $("totalPL").className =
+        `stat-value ${
+            totalPL > 0
+                ? "positive"
+                : totalPL < 0
+                    ? "negative"
+                    : ""
+        }`;
+
+
+    $("dashboardWinBar").style.width =
+        `${Math.min(winRate, 100)}%`;
+
+
+    const grossProfit =
+        trades
+            .filter(
+                t => number(t.profitLoss) > 0
+            )
+            .reduce(
+                (sum, t) =>
+                    sum + number(t.profitLoss),
+                0
+            );
+
+
+    const grossLoss =
+        Math.abs(
+            trades
+                .filter(
+                    t => number(t.profitLoss) < 0
+                )
+                .reduce(
+                    (sum, t) =>
+                        sum + number(t.profitLoss),
+                    0
+                )
+        );
+
+
+    const profitFactor =
+        grossLoss > 0
+            ? grossProfit / grossLoss
+            : grossProfit > 0
+                ? Infinity
+                : 0;
+
+
+    const rrValues =
+        trades
+            .map(t => number(t.rr))
+            .filter(v => v > 0);
+
+
+    const avgRR =
+        rrValues.length
+            ? rrValues.reduce(
+                (a, b) => a + b,
+                0
+            ) / rrValues.length
+            : 0;
+
+
+    const winsPL =
+        trades
+            .filter(
+                t => number(t.profitLoss) > 0
+            )
+            .map(
+                t => number(t.profitLoss)
+            );
+
+
+    const lossesPL =
+        trades
+            .filter(
+                t => number(t.profitLoss) < 0
+            )
+            .map(
+                t => number(t.profitLoss)
+            );
+
+
+    const avgWin =
+        winsPL.length
+            ? winsPL.reduce(
+                (a, b) => a + b,
+                0
+            ) / winsPL.length
+            : 0;
+
+
+    const avgLoss =
+        lossesPL.length
+            ? lossesPL.reduce(
+                (a, b) => a + b,
+                0
+            ) / lossesPL.length
+            : 0;
+
+
+    $("dashboardProfitFactor").textContent =
+        grossLoss > 0
+            ? profitFactor.toFixed(2)
+            : grossProfit > 0
+                ? "∞"
+                : "—";
+
+
+    $("dashboardAverageR").textContent =
+        avgRR > 0
+            ? `1:${avgRR.toFixed(2)}`
+            : "—";
+
+
+    $("dashboardAverageWin").textContent =
+        formatMoney(avgWin);
+
+
+    $("dashboardAverageLoss").textContent =
+        formatMoney(avgLoss);
+
+
+    renderRecentTrades();
+
+    renderEquityChart();
+
+    renderDonut(
+        wins,
+        losses,
+        breakevens
+    );
 
 }
 
@@ -1008,80 +1817,523 @@ function updateDashboard() {
 
 function renderRecentTrades() {
 
-  const body =
-    $("recentTradesBody");
-
-  const recent =
-    [...trades]
-      .sort((a,b) =>
-        number(b.createdAt) -
-        number(a.createdAt)
-      )
-      .slice(0, 8);
+    const body =
+        $("recentTradesBody");
 
 
-  body.innerHTML = "";
+    const recent =
+        [...trades]
+            .sort(
+                (a, b) =>
+                    number(b.createdAt) -
+                    number(a.createdAt)
+            )
+            .slice(0, 7);
 
 
-  if (!recent.length) {
-
-    $("recentEmpty").classList.remove("hidden");
-
-    return;
-
-  }
+    body.innerHTML = "";
 
 
-  $("recentEmpty").classList.add("hidden");
+    $("recentEmpty").classList.toggle(
+        "hidden",
+        recent.length > 0
+    );
 
 
-  recent.forEach((trade) => {
+    recent.forEach(trade => {
 
-    const pl =
-      number(trade.profitLoss);
-
-
-    const tr =
-      document.createElement("tr");
+        const row =
+            document.createElement("tr");
 
 
-    tr.innerHTML = `
+        row.innerHTML = `
 
-      <td>${escapeHTML(trade.date || "-")}</td>
+            <td>
+                ${escapeHtml(formatDate(trade.date))}
+            </td>
 
-      <td>${escapeHTML(trade.pair || "-")}</td>
+            <td>
+                <strong>
+                    ${escapeHtml(trade.pair || "—")}
+                </strong>
+            </td>
 
-      <td class="${
-        trade.direction === "Buy"
-          ? "buy"
-          : "sell"
-      }">
-        ${escapeHTML(trade.direction || "-")}
-      </td>
+            <td class="${getDirectionClass(trade.direction)}">
+                ${escapeHtml(trade.direction || "—")}
+            </td>
 
-      <td>${escapeHTML(trade.entry ?? "-")}</td>
+            <td>
+                ${escapeHtml(trade.setup || "—")}
+            </td>
 
-      <td>1:${number(trade.rr).toFixed(2)}</td>
+            <td>
+                ${trade.rr > 0
+                    ? `1:${number(trade.rr).toFixed(2)}`
+                    : "—"
+                }
+            </td>
 
-      <td class="${
-        trade.result === "Win"
-          ? "profit"
-          : trade.result === "Loss"
-          ? "loss"
-          : "neutral"
-      }">
-        ${escapeHTML(trade.result || "-")}
-      </td>
+            <td>
+                <span class="result-chip ${getResultClass(trade.result)}">
+                    ${escapeHtml(trade.result || "—")}
+                </span>
+            </td>
 
-      <td class="${moneyClass(pl)}">
-        ${money(pl)}
-      </td>
+            <td class="${
+                number(trade.profitLoss) > 0
+                    ? "positive"
+                    : number(trade.profitLoss) < 0
+                        ? "negative"
+                        : ""
+            }">
 
-    `;
+                ${formatMoney(trade.profitLoss)}
 
-    body.appendChild(tr);
+            </td>
 
-  });
+        `;
+
+
+        body.appendChild(row);
+
+    });
+
+}
+
+
+/* =========================================================
+   EQUITY CHART
+========================================================= */
+
+function renderEquityChart() {
+
+    const canvas =
+        $("equityCanvas");
+
+    if (!canvas) return;
+
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const dpr =
+        window.devicePixelRatio || 1;
+
+
+    const width =
+        Math.max(rect.width, 300);
+
+    const height =
+        Math.max(rect.height, 220);
+
+
+    canvas.width =
+        width * dpr;
+
+    canvas.height =
+        height * dpr;
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    ctx.scale(dpr, dpr);
+
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    const sorted =
+        [...trades]
+            .sort(
+                (a, b) =>
+                    number(a.createdAt) -
+                    number(b.createdAt)
+            );
+
+
+    const values = [];
+
+    let equity =
+        number(
+            userSettings.startingBalance
+        );
+
+
+    values.push(equity);
+
+
+    sorted.forEach(trade => {
+
+        equity +=
+            number(trade.profitLoss);
+
+        values.push(equity);
+
+    });
+
+
+    if (values.length < 2) {
+
+        drawChartEmpty(
+            ctx,
+            width,
+            height
+        );
+
+        return;
+
+    }
+
+
+    const padding = {
+        left: 10,
+        right: 10,
+        top: 20,
+        bottom: 28
+    };
+
+
+    const min =
+        Math.min(...values);
+
+    const max =
+        Math.max(...values);
+
+
+    const range =
+        Math.max(max - min, 1);
+
+
+    const chartWidth =
+        width -
+        padding.left -
+        padding.right;
+
+
+    const chartHeight =
+        height -
+        padding.top -
+        padding.bottom;
+
+
+    /* GRID */
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,0.055)";
+
+    ctx.lineWidth = 1;
+
+
+    for (
+        let i = 0;
+        i <= 4;
+        i++
+    ) {
+
+        const y =
+            padding.top +
+            chartHeight *
+            (i / 4);
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            padding.left,
+            y
+        );
+
+        ctx.lineTo(
+            width - padding.right,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* AREA */
+
+    const points =
+        values.map(
+            (value, index) => {
+
+                const x =
+                    padding.left +
+                    chartWidth *
+                    (
+                        index /
+                        (values.length - 1)
+                    );
+
+
+                const y =
+                    padding.top +
+                    chartHeight *
+                    (
+                        1 -
+                        (value - min) /
+                        range
+                    );
+
+
+                return {
+                    x,
+                    y
+                };
+
+            }
+        );
+
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            padding.top,
+            0,
+            height
+        );
+
+
+    gradient.addColorStop(
+        0,
+        "rgba(216,168,78,0.20)"
+    );
+
+
+    gradient.addColorStop(
+        1,
+        "rgba(216,168,78,0)"
+    );
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        points[0].x,
+        height - padding.bottom
+    );
+
+
+    points.forEach(
+        point => {
+
+            ctx.lineTo(
+                point.x,
+                point.y
+            );
+
+        }
+    );
+
+
+    ctx.lineTo(
+        points[points.length - 1].x,
+        height - padding.bottom
+    );
+
+
+    ctx.closePath();
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.fill();
+
+
+    /* LINE */
+
+    ctx.beginPath();
+
+    points.forEach(
+        (point, index) => {
+
+            if (index === 0) {
+
+                ctx.moveTo(
+                    point.x,
+                    point.y
+                );
+
+            } else {
+
+                ctx.lineTo(
+                    point.x,
+                    point.y
+                );
+
+            }
+
+        }
+    );
+
+
+    ctx.strokeStyle =
+        "#e2b85a";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+
+    /* LAST POINT */
+
+    const last =
+        points[points.length - 1];
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        last.x,
+        last.y,
+        4,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        "#e2b85a";
+
+    ctx.fill();
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        last.x,
+        last.y,
+        8,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.strokeStyle =
+        "rgba(226,184,90,0.2)";
+
+    ctx.stroke();
+
+
+    /* LABEL */
+
+    ctx.fillStyle =
+        "#697281";
+
+    ctx.font =
+        "9px Inter, system-ui";
+
+
+    ctx.fillText(
+        formatMoney(max),
+        10,
+        12
+    );
+
+
+    ctx.fillText(
+        formatMoney(min),
+        10,
+        height - 7
+    );
+
+}
+
+
+function drawChartEmpty(
+    ctx,
+    width,
+    height
+) {
+
+    ctx.fillStyle =
+        "#596170";
+
+    ctx.font =
+        "11px Inter, system-ui";
+
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+        "Add trades to build your equity curve",
+        width / 2,
+        height / 2
+    );
+
+    ctx.textAlign = "left";
+
+}
+
+
+/* =========================================================
+   DONUT
+========================================================= */
+
+function renderDonut(
+    wins,
+    losses,
+    breakevens
+) {
+
+    const total =
+        wins +
+        losses +
+        breakevens;
+
+
+    $("donutTotal").textContent =
+        total;
+
+    $("donutWins").textContent =
+        wins;
+
+    $("donutLosses").textContent =
+        losses;
+
+    $("donutBE").textContent =
+        breakevens;
+
+
+    if (!total) {
+
+        $("resultDonut").style.background =
+            "conic-gradient(#343b48 0deg 360deg)";
+
+        return;
+
+    }
+
+
+    const winDeg =
+        wins / total * 360;
+
+    const lossDeg =
+        losses / total * 360;
+
+
+    $("resultDonut").style.background =
+        `
+        conic-gradient(
+            var(--green)
+            0deg ${winDeg}deg,
+
+            var(--red)
+            ${winDeg}deg
+            ${winDeg + lossDeg}deg,
+
+            #697384
+            ${winDeg + lossDeg}deg
+            360deg
+        )
+        `;
 
 }
 
@@ -1090,211 +2342,197 @@ function renderRecentTrades() {
    JOURNAL
 ========================================================= */
 
-function getFilteredTrades() {
-
-  const result =
-    $("filterResult").value;
-
-  const pair =
-    $("filterPair").value
-      .trim()
-      .toLowerCase();
-
-  const date =
-    $("filterDate").value;
-
-
-  return trades.filter((trade) => {
-
-    if (
-      result !== "All" &&
-      trade.result !== result
-    ) {
-      return false;
-    }
-
-
-    if (
-      pair &&
-      !String(trade.pair || "")
-        .toLowerCase()
-        .includes(pair)
-    ) {
-      return false;
-    }
-
-
-    if (
-      date &&
-      trade.date !== date
-    ) {
-      return false;
-    }
-
-
-    return true;
-
-  });
-
-}
-
-
 function renderJournal() {
 
-  const list =
-    getFilteredTrades();
+    const filtered =
+        getFilteredTrades();
 
 
-  const stats =
-    getStats(list);
+    const wins =
+        filtered.filter(
+            t => t.result === "Win"
+        ).length;
 
 
-  $("journalTrades").textContent =
-    list.length;
+    const losses =
+        filtered.filter(
+            t => t.result === "Loss"
+        ).length;
 
-  $("journalWins").textContent =
-    stats.wins;
-
-  $("journalLosses").textContent =
-    stats.losses;
-
-  $("journalPL").textContent =
-    money(stats.pl);
-
-  $("journalPL").className =
-    moneyClass(stats.pl);
-
-
-  const body =
-    $("journalTableBody");
-
-  body.innerHTML = "";
-
-
-  $("journalEmpty").classList.toggle(
-    "hidden",
-    list.length > 0
-  );
-
-
-  list.forEach((trade) => {
 
     const pl =
-      number(trade.profitLoss);
+        filtered.reduce(
+            (sum, t) =>
+                sum + number(t.profitLoss),
+            0
+        );
 
 
-    const tr =
-      document.createElement("tr");
+    $("journalTrades").textContent =
+        filtered.length;
+
+    $("journalWins").textContent =
+        wins;
+
+    $("journalLosses").textContent =
+        losses;
+
+    $("journalPL").textContent =
+        formatMoney(pl);
 
 
-    tr.innerHTML = `
-
-      <td>${escapeHTML(trade.date || "-")}</td>
-
-      <td>${escapeHTML(trade.time || "-")}</td>
-
-      <td>${escapeHTML(trade.pair || "-")}</td>
-
-      <td class="${
-        trade.direction === "Buy"
-          ? "buy"
-          : "sell"
-      }">
-        ${escapeHTML(trade.direction || "-")}
-      </td>
-
-      <td>${escapeHTML(trade.entry ?? "-")}</td>
-
-      <td>${escapeHTML(trade.sl ?? "-")}</td>
-
-      <td>${escapeHTML(trade.tp ?? "-")}</td>
-
-      <td>1:${number(trade.rr).toFixed(2)}</td>
-
-      <td>${number(trade.lotSize).toFixed(2)}</td>
-
-      <td class="${
-        trade.result === "Win"
-          ? "profit"
-          : trade.result === "Loss"
-          ? "loss"
-          : "neutral"
-      }">
-        ${escapeHTML(trade.result || "-")}
-      </td>
-
-      <td class="${moneyClass(pl)}">
-        ${money(pl)}
-      </td>
-
-      <td>
-
-        <button
-          class="action-btn"
-          data-edit="${trade.id}"
-        >
-          Edit
-        </button>
-
-        <button
-          class="action-btn delete-btn"
-          data-delete="${trade.id}"
-        >
-          Delete
-        </button>
-
-      </td>
-
-    `;
+    $("journalPL").className =
+        pl > 0
+            ? "positive"
+            : pl < 0
+                ? "negative"
+                : "";
 
 
-    body.appendChild(tr);
+    const body =
+        $("journalTableBody");
 
-  });
+
+    body.innerHTML = "";
+
+
+    $("journalEmpty").classList.toggle(
+        "hidden",
+        filtered.length > 0
+    );
+
+
+    filtered.forEach(trade => {
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>
+                ${escapeHtml(formatDate(trade.date))}
+            </td>
+
+            <td>
+                <strong>
+                    ${escapeHtml(trade.pair || "—")}
+                </strong>
+            </td>
+
+            <td class="${getDirectionClass(trade.direction)}">
+                ${escapeHtml(trade.direction || "—")}
+            </td>
+
+            <td>
+                ${trade.entry !== undefined
+                    ? formatNumber(trade.entry, 2)
+                    : "—"
+                }
+            </td>
+
+            <td>
+                ${trade.rr > 0
+                    ? `1:${number(trade.rr).toFixed(2)}`
+                    : "—"
+                }
+            </td>
+
+            <td>
+                ${trade.riskPercent !== undefined
+                    ? `${number(trade.riskPercent).toFixed(1)}%`
+                    : "—"
+                }
+            </td>
+
+            <td>
+                <span class="result-chip ${getResultClass(trade.result)}">
+                    ${escapeHtml(trade.result || "—")}
+                </span>
+            </td>
+
+            <td class="${
+                number(trade.profitLoss) > 0
+                    ? "positive"
+                    : number(trade.profitLoss) < 0
+                        ? "negative"
+                        : ""
+            }">
+                ${formatMoney(trade.profitLoss)}
+            </td>
+
+            <td>
+
+                <div class="action-group">
+
+                    <button
+                        class="icon-action"
+                        title="Edit"
+                        data-action="edit"
+                        data-id="${trade.id}"
+                    >
+                        ✎
+                    </button>
+
+                    <button
+                        class="icon-action delete"
+                        title="Delete"
+                        data-action="delete"
+                        data-id="${trade.id}"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+            </td>
+
+        `;
+
+
+        body.appendChild(row);
+
+    });
 
 }
 
 
-/* =========================================================
-   JOURNAL ACTIONS
-========================================================= */
-
 $("journalTableBody").addEventListener(
-  "click",
-  (event) => {
+    "click",
+    event => {
 
-    const editBtn =
-      event.target.closest("[data-edit]");
+        const button =
+            event.target.closest(
+                "[data-action]"
+            );
 
-    const deleteBtn =
-      event.target.closest("[data-delete]");
+        if (!button) return;
 
 
-    if (editBtn) {
+        const id =
+            button.dataset.id;
 
-      const trade =
-        trades.find(
-          t => t.id === editBtn.dataset.edit
-        );
 
-      if (trade) {
+        if (
+            button.dataset.action ===
+            "edit"
+        ) {
 
-        openTradeModal(trade);
+            editTrade(id);
 
-      }
+        }
+
+
+        if (
+            button.dataset.action ===
+            "delete"
+        ) {
+
+            deleteTrade(id);
+
+        }
 
     }
-
-
-    if (deleteBtn) {
-
-      deleteTrade(
-        deleteBtn.dataset.delete
-      );
-
-    }
-
-  }
 );
 
 
@@ -1304,116 +2542,340 @@ $("journalTableBody").addEventListener(
 
 function renderAnalytics() {
 
-  const stats =
-    getStats();
+    const total =
+        trades.length;
 
 
-  $("analyticsTrades").textContent =
-    trades.length;
-
-  $("analyticsWinRate").textContent =
-    `${stats.winRate.toFixed(1)}%`;
-
-  $("analyticsRR").textContent =
-    stats.avgRR.toFixed(2);
-
-  $("analyticsPL").textContent =
-    money(stats.pl);
-
-  $("analyticsPL").className =
-    moneyClass(stats.pl);
+    const wins =
+        trades.filter(
+            t => t.result === "Win"
+        ).length;
 
 
-  $("analyticsWins").textContent =
-    stats.wins;
-
-  $("analyticsLosses").textContent =
-    stats.losses;
-
-  $("analyticsBE").textContent =
-    stats.be;
+    const losses =
+        trades.filter(
+            t => t.result === "Loss"
+        ).length;
 
 
-  const total =
-    trades.length || 1;
+    const be =
+        trades.filter(
+            t => t.result === "Breakeven"
+        ).length;
 
 
-  $("winBar").style.width =
-    `${stats.wins / total * 100}%`;
-
-  $("lossBar").style.width =
-    `${stats.losses / total * 100}%`;
-
-  $("beBar").style.width =
-    `${stats.be / total * 100}%`;
+    const winRate =
+        total
+            ? wins / total * 100
+            : 0;
 
 
-  const winningPL =
-    trades
-      .map(t => number(t.profitLoss))
-      .filter(n => n > 0);
+    const pl =
+        trades.reduce(
+            (sum, t) =>
+                sum + number(t.profitLoss),
+            0
+        );
 
 
-  const losingPL =
-    trades
-      .map(t => number(t.profitLoss))
-      .filter(n => n < 0);
+    const rrValues =
+        trades
+            .map(
+                t => number(t.rr)
+            )
+            .filter(
+                v => v > 0
+            );
 
 
-  const averageWin =
-    winningPL.length
-      ? winningPL.reduce((a,b) => a+b,0)
-        / winningPL.length
-      : 0;
+    const avgRR =
+        rrValues.length
+            ? rrValues.reduce(
+                (a, b) => a + b,
+                0
+            ) / rrValues.length
+            : 0;
 
 
-  const averageLoss =
-    losingPL.length
-      ? losingPL.reduce((a,b) => a+b,0)
-        / losingPL.length
-      : 0;
+    const positivePL =
+        trades
+            .filter(
+                t => number(t.profitLoss) > 0
+            )
+            .map(
+                t => number(t.profitLoss)
+            );
 
 
-  const best =
-    trades.length
-      ? Math.max(
-          ...trades.map(t => number(t.profitLoss))
+    const negativePL =
+        trades
+            .filter(
+                t => number(t.profitLoss) < 0
+            )
+            .map(
+                t => number(t.profitLoss)
+            );
+
+
+    const grossProfit =
+        positivePL.reduce(
+            (a, b) => a + b,
+            0
+        );
+
+
+    const grossLoss =
+        Math.abs(
+            negativePL.reduce(
+                (a, b) => a + b,
+                0
+            )
+        );
+
+
+    const avgWin =
+        positivePL.length
+            ? grossProfit /
+              positivePL.length
+            : 0;
+
+
+    const avgLoss =
+        negativePL.length
+            ? (
+                negativePL.reduce(
+                    (a, b) => a + b,
+                    0
+                ) /
+                negativePL.length
+            )
+            : 0;
+
+
+    const best =
+        positivePL.length
+            ? Math.max(...positivePL)
+            : 0;
+
+
+    const worst =
+        negativePL.length
+            ? Math.min(...negativePL)
+            : 0;
+
+
+    $("analyticsTrades").textContent =
+        total;
+
+
+    $("analyticsWinRate").textContent =
+        `${winRate.toFixed(1)}%`;
+
+
+    $("analyticsRR").textContent =
+        avgRR > 0
+            ? `1:${avgRR.toFixed(2)}`
+            : "—";
+
+
+    $("analyticsPL").textContent =
+        formatMoney(pl);
+
+
+    $("analyticsPL").className =
+        pl > 0
+            ? "positive"
+            : pl < 0
+                ? "negative"
+                : "";
+
+
+    $("analyticsWins").textContent =
+        wins;
+
+
+    $("analyticsLosses").textContent =
+        losses;
+
+
+    $("analyticsBE").textContent =
+        be;
+
+
+    $("winBar").style.width =
+        total
+            ? `${wins / total * 100}%`
+            : "0%";
+
+
+    $("lossBar").style.width =
+        total
+            ? `${losses / total * 100}%`
+            : "0%";
+
+
+    $("beBar").style.width =
+        total
+            ? `${be / total * 100}%`
+            : "0%";
+
+
+    $("avgWin").textContent =
+        formatMoney(avgWin);
+
+
+    $("avgLoss").textContent =
+        formatMoney(avgLoss);
+
+
+    $("bestTrade").textContent =
+        formatMoney(best);
+
+
+    $("worstTrade").textContent =
+        formatMoney(worst);
+
+
+    $("analyticsProfitFactor").textContent =
+        grossLoss > 0
+            ? (
+                grossProfit /
+                grossLoss
+            ).toFixed(2)
+            : grossProfit > 0
+                ? "∞"
+                : "—";
+
+
+    renderBreakdown(
+        "sessionBreakdown",
+        "session"
+    );
+
+
+    renderBreakdown(
+        "setupBreakdown",
+        "setup"
+    );
+
+}
+
+
+function renderBreakdown(
+    containerId,
+    field
+) {
+
+    const container =
+        $(containerId);
+
+
+    const groups = {};
+
+
+    trades.forEach(
+        trade => {
+
+            const key =
+                trade[field] ||
+                "Not specified";
+
+
+            if (!groups[key]) {
+
+                groups[key] = {
+                    count: 0,
+                    pl: 0
+                };
+
+            }
+
+
+            groups[key].count++;
+
+            groups[key].pl +=
+                number(trade.profitLoss);
+
+        }
+    );
+
+
+    const entries =
+        Object.entries(groups)
+            .sort(
+                (a, b) =>
+                    b[1].count -
+                    a[1].count
+            );
+
+
+    if (!entries.length) {
+
+        container.innerHTML = `
+            <div class="empty-state compact-empty">
+                <p>No data yet.</p>
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    const maxCount =
+        Math.max(
+            ...entries.map(
+                item => item[1].count
+            )
+        );
+
+
+    container.innerHTML =
+        entries.map(
+            ([name, data]) => `
+
+                <div class="breakdown-item">
+
+                    <div class="breakdown-top">
+
+                        <span>
+                            ${escapeHtml(name)}
+                        </span>
+
+                        <strong class="${
+                            data.pl > 0
+                                ? "positive"
+                                : data.pl < 0
+                                    ? "negative"
+                                    : ""
+                        }">
+
+                            ${data.count}
+                            ·
+                            ${formatMoney(data.pl)}
+
+                        </strong>
+
+                    </div>
+
+                    <div class="breakdown-track">
+
+                        <div
+                            class="breakdown-fill"
+                            style="width:${(
+                                data.count /
+                                maxCount *
+                                100
+                            ).toFixed(1)}%"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+            `
         )
-      : 0;
-
-
-  const worst =
-    trades.length
-      ? Math.min(
-          ...trades.map(t => number(t.profitLoss))
-        )
-      : 0;
-
-
-  $("avgWin").textContent =
-    money(averageWin);
-
-  $("avgLoss").textContent =
-    money(averageLoss);
-
-  $("bestTrade").textContent =
-    money(best);
-
-  $("worstTrade").textContent =
-    money(worst);
-
-
-  $("avgWin").className =
-    moneyClass(averageWin);
-
-  $("avgLoss").className =
-    moneyClass(averageLoss);
-
-  $("bestTrade").className =
-    moneyClass(best);
-
-  $("worstTrade").className =
-    moneyClass(worst);
+        .join("");
 
 }
 
@@ -1422,464 +2884,651 @@ function renderAnalytics() {
    RISK CALCULATOR
 ========================================================= */
 
-function calculateRiskCalculator() {
-
-  const balance =
-    number($("calcBalance").value);
-
-  const riskPercent =
-    number($("calcRisk").value);
-
-  const entry =
-    number($("calcEntry").value);
-
-  const sl =
-    number($("calcSL").value);
-
-  const tp =
-    number($("calcTP").value);
-
-  const direction =
-    $("calcDirection").value;
+$("calculateRiskBtn").addEventListener(
+    "click",
+    calculateRisk
+);
 
 
-  const riskAmount =
-    balance * riskPercent / 100;
+function calculateRisk() {
+
+    const balance =
+        number(
+            $("calcBalance").value
+        );
 
 
-  $("calcRiskAmount").textContent =
-    money(riskAmount);
+    const riskPercent =
+        number(
+            $("calcRisk").value
+        );
 
 
-  if (entry <= 0 || sl <= 0) {
-
-    $("calcDistance").textContent = "0";
-
-    $("calcLot").textContent = "0.00";
-
-    $("calcRR").textContent = "0:0";
-
-    return;
-
-  }
+    const entry =
+        number(
+            $("calcEntry").value
+        );
 
 
-  const distance =
-    Math.abs(entry - sl);
+    const sl =
+        number(
+            $("calcSL").value
+        );
 
 
-  $("calcDistance").textContent =
-    distance.toFixed(3);
+    const tp =
+        number(
+            $("calcTP").value
+        );
 
 
-  const lot =
-    riskAmount /
-    (distance * 100);
+    const direction =
+        $("calcDirection").value;
 
 
-  $("calcLot").textContent =
-    Math.max(0, lot).toFixed(2);
+    const riskAmount =
+        balance *
+        riskPercent /
+        100;
 
 
-  if (tp > 0) {
+    let distance = 0;
 
-    let risk;
-    let reward;
+    let reward = 0;
 
 
     if (direction === "Buy") {
 
-      risk = entry - sl;
+        distance =
+            entry - sl;
 
-      reward = tp - entry;
+        reward =
+            tp - entry;
 
     } else {
 
-      risk = sl - entry;
+        distance =
+            sl - entry;
 
-      reward = entry - tp;
+        reward =
+            entry - tp;
 
     }
 
 
-    if (risk > 0 && reward > 0) {
+    $("calcRiskAmount").textContent =
+        formatMoney(riskAmount);
 
-      $("calcRR").textContent =
-        `1:${(reward / risk).toFixed(2)}`;
 
-    } else {
+    if (
+        balance <= 0 ||
+        riskPercent <= 0 ||
+        entry <= 0 ||
+        sl <= 0 ||
+        tp <= 0 ||
+        distance <= 0 ||
+        reward <= 0
+    ) {
 
-      $("calcRR").textContent =
-        "Invalid";
+        $("calcDistance").textContent =
+            "Invalid";
+
+        $("calcRR").textContent =
+            "Invalid";
+
+        $("calcLot").textContent =
+            "—";
+
+        return;
 
     }
 
-  }
+
+    const rr =
+        reward / distance;
+
+
+    const lot =
+        riskAmount /
+        (distance * 100);
+
+
+    $("calcDistance").textContent =
+        formatNumber(
+            Math.abs(distance),
+            2
+        );
+
+
+    $("calcRR").textContent =
+        `1:${rr.toFixed(2)}`;
+
+
+    $("calcLot").textContent =
+        lot.toFixed(2);
 
 }
-
-
-$("calculateRiskBtn").addEventListener(
-  "click",
-  calculateRiskCalculator
-);
 
 
 /* =========================================================
    CALENDAR
 ========================================================= */
 
-function renderCalendar() {
-
-  const year =
-    calendarDate.getFullYear();
-
-  const month =
-    calendarDate.getMonth();
-
-
-  const monthName =
-    calendarDate.toLocaleString(
-      "en-US",
-      {
-        month: "long",
-        year: "numeric"
-      }
-    );
-
-
-  $("calendarMonthLabel").textContent =
-    monthName;
-
-
-  const firstDay =
-    new Date(year, month, 1).getDay();
-
-
-  const daysInMonth =
-    new Date(year, month + 1, 0).getDate();
-
-
-  const grid =
-    $("calendarGrid");
-
-
-  grid.innerHTML = "";
-
-
-  for (let i = 0; i < firstDay; i++) {
-
-    const empty =
-      document.createElement("div");
-
-    empty.className =
-      "calendar-day empty";
-
-    grid.appendChild(empty);
-
-  }
-
-
-  let monthPL = 0;
-
-  let wins = 0;
-
-  let losses = 0;
-
-
-  for (let day = 1; day <= daysInMonth; day++) {
-
-    const cell =
-      document.createElement("div");
-
-    cell.className =
-      "calendar-day";
-
-
-    const dateString =
-      `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-
-
-    const dayTrades =
-      trades.filter(
-        t => t.date === dateString
-      );
-
-
-    const dayPL =
-      dayTrades.reduce(
-        (sum, t) =>
-          sum + number(t.profitLoss),
-        0
-      );
-
-
-    monthPL += dayPL;
-
-
-    wins +=
-      dayTrades.filter(
-        t => t.result === "Win"
-      ).length;
-
-
-    losses +=
-      dayTrades.filter(
-        t => t.result === "Loss"
-      ).length;
-
-
-    if (
-      dateString === getLocalDate()
-    ) {
-
-      cell.classList.add("today");
-
-    }
-
-
-    let plText = "";
-
-
-    if (dayTrades.length === 0) {
-
-      plText = "No trade";
-
-    } else {
-
-      plText = money(dayPL);
-
-    }
-
-
-    cell.innerHTML = `
-
-      <div class="day-number">
-        ${day}
-      </div>
-
-      <div class="day-pl ${moneyClass(dayPL)}">
-        ${escapeHTML(plText)}
-      </div>
-
-    `;
-
-
-    grid.appendChild(cell);
-
-  }
-
-
-  $("calendarMonthPL").textContent =
-    money(monthPL);
-
-  $("calendarMonthPL").className =
-    moneyClass(monthPL);
-
-  $("calendarWins").textContent =
-    wins;
-
-  $("calendarLosses").textContent =
-    losses;
-
-}
-
-
 $("prevMonth").addEventListener(
-  "click",
-  () => {
+    "click",
+    () => {
 
-    calendarDate.setMonth(
-      calendarDate.getMonth() - 1
-    );
+        calendarDate.setMonth(
+            calendarDate.getMonth() - 1
+        );
 
-    renderCalendar();
+        renderCalendar();
 
-  }
+    }
 );
 
 
 $("nextMonth").addEventListener(
-  "click",
-  () => {
+    "click",
+    () => {
 
-    calendarDate.setMonth(
-      calendarDate.getMonth() + 1
-    );
+        calendarDate.setMonth(
+            calendarDate.getMonth() + 1
+        );
 
-    renderCalendar();
+        renderCalendar();
 
-  }
+    }
 );
 
 
 $("todayMonth").addEventListener(
-  "click",
-  () => {
+    "click",
+    () => {
 
-    calendarDate = new Date();
+        calendarDate =
+            new Date();
 
-    renderCalendar();
+        renderCalendar();
 
-  }
+    }
 );
 
 
-/* =========================================================
-   NAVIGATION
-========================================================= */
+function renderCalendar() {
 
-function showPage(pageId) {
+    const year =
+        calendarDate.getFullYear();
 
-  document
-    .querySelectorAll(".page")
-    .forEach(page => {
-
-      page.classList.remove(
-        "active-page"
-      );
-
-    });
+    const month =
+        calendarDate.getMonth();
 
 
-  const page =
-    $(pageId);
-
-
-  if (page) {
-
-    page.classList.add(
-      "active-page"
-    );
-
-  }
-
-
-  document
-    .querySelectorAll(".nav-item")
-    .forEach(item => {
-
-      item.classList.toggle(
-        "active",
-        item.dataset.page === pageId
-      );
-
-    });
-
-
-  closeMobileMenu();
-
-}
-
-
-document
-  .querySelectorAll("[data-page]")
-  .forEach(button => {
-
-    button.addEventListener(
-      "click",
-      () => {
-
-        showPage(
-          button.dataset.page
+    $("calendarMonthLabel").textContent =
+        calendarDate.toLocaleDateString(
+            "en-US",
+            {
+                month: "long",
+                year: "numeric"
+            }
         );
 
-      }
+
+    const monthTrades =
+        trades.filter(
+            trade => {
+
+                if (!trade.date)
+                    return false;
+
+                const date =
+                    new Date(
+                        `${trade.date}T00:00:00`
+                    );
+
+                return (
+                    date.getFullYear() === year &&
+                    date.getMonth() === month
+                );
+
+            }
+        );
+
+
+    const monthPL =
+        monthTrades.reduce(
+            (sum, trade) =>
+                sum +
+                number(trade.profitLoss),
+            0
+        );
+
+
+    const monthWins =
+        monthTrades.filter(
+            t => t.result === "Win"
+        ).length;
+
+
+    const monthLosses =
+        monthTrades.filter(
+            t => t.result === "Loss"
+        ).length;
+
+
+    $("calendarMonthPL").textContent =
+        formatMoney(monthPL);
+
+
+    $("calendarMonthPL").className =
+        monthPL > 0
+            ? "positive"
+            : monthPL < 0
+                ? "negative"
+                : "";
+
+
+    $("calendarWins").textContent =
+        monthWins;
+
+
+    $("calendarLosses").textContent =
+        monthLosses;
+
+
+    const grid =
+        $("calendarGrid");
+
+
+    grid.innerHTML = "";
+
+
+    const firstDay =
+        new Date(
+            year,
+            month,
+            1
+        );
+
+
+    /*
+        Convert Sunday=0 into
+        Monday=0.
+    */
+
+    const startOffset =
+        (
+            firstDay.getDay() +
+            6
+        ) % 7;
+
+
+    const daysInMonth =
+        new Date(
+            year,
+            month + 1,
+            0
+        ).getDate();
+
+
+    const previousMonthDays =
+        new Date(
+            year,
+            month,
+            0
+        ).getDate();
+
+
+    const totalCells =
+        Math.ceil(
+            (
+                startOffset +
+                daysInMonth
+            ) / 7
+        ) * 7;
+
+
+    const today =
+        todayString();
+
+
+    for (
+        let i = 0;
+        i < totalCells;
+        i++
+    ) {
+
+        let dayNumber;
+
+        let cellDate;
+
+        let isOtherMonth = false;
+
+
+        if (i < startOffset) {
+
+            dayNumber =
+                previousMonthDays -
+                startOffset +
+                i +
+                1;
+
+            cellDate =
+                new Date(
+                    year,
+                    month - 1,
+                    dayNumber
+                );
+
+            isOtherMonth = true;
+
+        } else if (
+            i >=
+            startOffset +
+            daysInMonth
+        ) {
+
+            dayNumber =
+                i -
+                (
+                    startOffset +
+                    daysInMonth
+                ) +
+                1;
+
+            cellDate =
+                new Date(
+                    year,
+                    month + 1,
+                    dayNumber
+                );
+
+            isOtherMonth = true;
+
+        } else {
+
+            dayNumber =
+                i -
+                startOffset +
+                1;
+
+            cellDate =
+                new Date(
+                    year,
+                    month,
+                    dayNumber
+                );
+
+        }
+
+
+        const dateKey =
+            `${cellDate.getFullYear()}-${
+                String(
+                    cellDate.getMonth() + 1
+                ).padStart(2, "0")
+            }-${
+                String(
+                    cellDate.getDate()
+                ).padStart(2, "0")
+            }`;
+
+
+        const dayTrades =
+            trades.filter(
+                trade =>
+                    trade.date === dateKey
+            );
+
+
+        const dayPL =
+            dayTrades.reduce(
+                (sum, trade) =>
+                    sum +
+                    number(trade.profitLoss),
+                0
+            );
+
+
+        const cell =
+            document.createElement("div");
+
+
+        cell.className =
+            "calendar-day";
+
+
+        if (isOtherMonth) {
+
+            cell.classList.add(
+                "other-month"
+            );
+
+        }
+
+
+        if (dateKey === today) {
+
+            cell.classList.add(
+                "today"
+            );
+
+        }
+
+
+        let resultHTML = "";
+
+
+        if (dayTrades.length > 0) {
+
+            resultHTML = `
+
+                <div class="day-result">
+
+                    <div class="day-pl ${
+                        dayPL > 0
+                            ? "positive"
+                            : dayPL < 0
+                                ? "negative"
+                                : ""
+                    }">
+
+                        ${formatMoney(dayPL)}
+
+                    </div>
+
+                    <div class="day-count">
+
+                        ${dayTrades.length}
+                        trade${dayTrades.length === 1 ? "" : "s"}
+
+                    </div>
+
+                </div>
+
+            `;
+
+        }
+
+
+        cell.innerHTML = `
+
+            <div class="day-number">
+                ${dayNumber}
+            </div>
+
+            ${resultHTML}
+
+        `;
+
+
+        grid.appendChild(cell);
+
+    }
+
+}
+
+
+/* =========================================================
+   CSV EXPORT
+========================================================= */
+
+$("exportCsvBtn").addEventListener(
+    "click",
+    exportCSV
+);
+
+
+function exportCSV() {
+
+    if (!trades.length) {
+
+        showToast(
+            "There are no trades to export.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    const headers = [
+
+        "Date",
+        "Time",
+        "Pair",
+        "Direction",
+        "Entry",
+        "SL",
+        "TP",
+        "RR",
+        "Risk %",
+        "Risk Amount",
+        "Lot Size",
+        "Setup",
+        "Session",
+        "HTF Bias",
+        "Liquidity",
+        "Confirmation",
+        "Result",
+        "Profit/Loss",
+        "Confidence",
+        "Psychology",
+        "Mistake",
+        "Notes"
+
+    ];
+
+
+    const rows =
+        trades.map(
+            trade => [
+
+                trade.date || "",
+
+                trade.time || "",
+
+                trade.pair || "",
+
+                trade.direction || "",
+
+                trade.entry ?? "",
+
+                trade.sl ?? "",
+
+                trade.tp ?? "",
+
+                trade.rr ?? "",
+
+                trade.riskPercent ?? "",
+
+                trade.riskAmount ?? "",
+
+                trade.lotSize ?? "",
+
+                trade.setup || "",
+
+                trade.session || "",
+
+                trade.htfBias || "",
+
+                trade.liquidity || "",
+
+                trade.confirmation || "",
+
+                trade.result || "",
+
+                trade.profitLoss ?? "",
+
+                trade.confidence || "",
+
+                trade.psychology || "",
+
+                trade.mistake || "",
+
+                trade.notes || ""
+
+            ]
+        );
+
+
+    const csv = [
+
+        headers,
+        ...rows
+
+    ]
+        .map(
+            row =>
+                row
+                    .map(
+                        value =>
+                            `"${String(value)
+                                .replace(/"/g, '""')}"`
+                    )
+                    .join(",")
+        )
+        .join("\n");
+
+
+    const blob =
+        new Blob(
+            [csv],
+            {
+                type: "text/csv;charset=utf-8;"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(blob);
+
+
+    const link =
+        document.createElement("a");
+
+
+    link.href = url;
+
+    link.download =
+        `UjR-Fx-Trading-Journal-${todayString()}.csv`;
+
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+
+    showToast(
+        "CSV exported."
     );
 
-  });
-
-
-/* =========================================================
-   MOBILE MENU
-========================================================= */
-
-function openMobileMenu() {
-
-  $("sidebar").classList.add("open");
-
-  $("overlay").classList.add("show");
-
 }
-
-
-function closeMobileMenu() {
-
-  $("sidebar").classList.remove("open");
-
-  $("overlay").classList.remove("show");
-
-}
-
-
-$("mobileMenuBtn").addEventListener(
-  "click",
-  openMobileMenu
-);
-
-
-$("overlay").addEventListener(
-  "click",
-  closeMobileMenu
-);
-
-
-/* =========================================================
-   ADD TRADE BUTTONS
-========================================================= */
-
-$("quickAddBtn").addEventListener(
-  "click",
-  () => openTradeModal()
-);
-
-
-$("journalAddBtn").addEventListener(
-  "click",
-  () => openTradeModal()
-);
-
-
-$("mobileAddBtn").addEventListener(
-  "click",
-  () => openTradeModal()
-);
-
-
-/* =========================================================
-   FILTER EVENTS
-========================================================= */
-
-$("filterResult").addEventListener(
-  "change",
-  renderJournal
-);
-
-$("filterPair").addEventListener(
-  "input",
-  renderJournal
-);
-
-$("filterDate").addEventListener(
-  "change",
-  renderJournal
-);
-
-
-$("clearFilters").addEventListener(
-  "click",
-  () => {
-
-    $("filterResult").value = "All";
-
-    $("filterPair").value = "";
-
-    $("filterDate").value = "";
-
-    renderJournal();
-
-  }
-);
 
 
 /* =========================================================
@@ -1888,91 +3537,92 @@ $("clearFilters").addEventListener(
 
 function renderEverything() {
 
-  updateDashboard();
+    renderDashboard();
 
-  renderJournal();
+    renderJournal();
 
-  renderAnalytics();
+    renderAnalytics();
 
-  renderCalendar();
+    renderCalendar();
 
 }
 
 
 /* =========================================================
-   AUTH STATE
+   WINDOW RESIZE
 ========================================================= */
 
-onAuthStateChanged(
-  auth,
-  async (user) => {
+window.addEventListener(
+    "resize",
+    () => {
 
-    currentUser = user;
+        if (
+            $("dashboardPage")
+                .classList
+                .contains("active-page")
+        ) {
 
+            renderEquityChart();
 
-    if (user) {
-
-      $("loginScreen").classList.add("hidden");
-
-      $("app").classList.remove("hidden");
-
-      renderUser();
-
-      await loadAccount();
-
-      startTradeListener();
-
-      renderEverything();
-
-    } else {
-
-      $("loginScreen").classList.remove("hidden");
-
-      $("app").classList.add("hidden");
-
-      trades = [];
-
-      if (unsubscribeTrades) {
-
-        unsubscribeTrades();
-
-        unsubscribeTrades = null;
-
-      }
+        }
 
     }
-
-  }
 );
 
 
 /* =========================================================
    KEYBOARD SHORTCUT
-   Press N to add trade.
 ========================================================= */
 
 document.addEventListener(
-  "keydown",
-  (event) => {
+    "keydown",
+    event => {
 
-    if (
-      event.key.toLowerCase() === "n" &&
-      $("tradeModal").classList.contains("hidden") &&
-      document.activeElement?.tagName !== "INPUT" &&
-      document.activeElement?.tagName !== "TEXTAREA" &&
-      document.activeElement?.tagName !== "SELECT"
-    ) {
+        const tag =
+            document.activeElement?.tagName;
 
-      openTradeModal();
+
+        if (
+            event.key.toLowerCase() === "n" &&
+            tag !== "INPUT" &&
+            tag !== "TEXTAREA" &&
+            tag !== "SELECT"
+        ) {
+
+            openAddTradeModal();
+
+        }
+
+
+        if (
+            event.key === "Escape" &&
+            !$("tradeModal")
+                .classList
+                .contains("hidden")
+        ) {
+
+            closeTradeModal();
+
+        }
 
     }
-
-  }
 );
 
 
 /* =========================================================
-   INITIAL RENDER
+   INITIAL UI
 ========================================================= */
 
-renderCalendar();
+$("tradeDate").value =
+    todayString();
+
+$("tradeTime").value =
+    currentTimeString();
+
+$("calcBalance").value =
+    userSettings.startingBalance;
+
+
+/* =========================================================
+   END
+========================================================= */
