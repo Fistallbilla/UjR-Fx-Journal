@@ -40,7 +40,7 @@ button {
 }
 
 
-/* ================= LOGIN ================= */
+/* LOGIN */
 
 .login-screen {
   min-height: 100vh;
@@ -49,11 +49,7 @@ button {
   justify-content: center;
   padding: 20px;
   background:
-    radial-gradient(
-      circle at top,
-      #1b160d,
-      #080808 55%
-    );
+    radial-gradient(circle at top, #1b160d, #080808 55%);
 }
 
 .login-card {
@@ -63,7 +59,7 @@ button {
   border-radius: 22px;
   background: rgba(17, 17, 17, 0.96);
   text-align: center;
-  box-shadow: 0 30px 80px rgba(0,0,0,.45);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, .45);
 }
 
 .login-logo {
@@ -93,6 +89,10 @@ button {
   font-weight: 700;
 }
 
+.google-btn:hover {
+  background: #eeeeee;
+}
+
 .error {
   color: var(--red);
   font-size: 13px;
@@ -100,11 +100,14 @@ button {
 }
 
 
-/* ================= APP ================= */
+/* APP */
 
 .app {
   min-height: 100vh;
 }
+
+
+/* SIDEBAR */
 
 .sidebar {
   position: fixed;
@@ -202,7 +205,7 @@ button {
 }
 
 
-/* ================= MAIN ================= */
+/* MAIN */
 
 .main {
   margin-left: 250px;
@@ -261,8 +264,12 @@ button {
   border-color: var(--border);
 }
 
+.secondary-btn:hover {
+  border-color: #444;
+}
 
-/* ================= PAGE ================= */
+
+/* PAGES */
 
 .page {
   display: none;
@@ -291,7 +298,7 @@ button {
 }
 
 
-/* ================= STATS ================= */
+/* STATS */
 
 .stats-grid {
   display: grid;
@@ -328,7 +335,7 @@ button {
 }
 
 
-/* ================= PANELS ================= */
+/* PANELS */
 
 .panel {
   background: var(--panel);
@@ -401,7 +408,7 @@ button {
 }
 
 
-/* ================= RECENT ================= */
+/* RECENT */
 
 .recent-trade {
   display: flex;
@@ -449,7 +456,7 @@ button {
 }
 
 
-/* ================= JOURNAL ================= */
+/* JOURNAL */
 
 .journal-stats {
   display: grid;
@@ -512,6 +519,10 @@ textarea {
   resize: vertical;
 }
 
+input[readonly] {
+  color: var(--gold2);
+}
+
 .table-wrap {
   overflow-x: auto;
 }
@@ -559,6 +570,11 @@ td {
   font-size: 10px;
 }
 
+.edit-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold2);
+}
+
 .delete-btn:hover {
   color: var(--red);
 }
@@ -583,7 +599,7 @@ td {
 }
 
 
-/* ================= FORMS ================= */
+/* FORMS */
 
 .form-grid {
   display: grid;
@@ -616,10 +632,13 @@ td {
   cursor: not-allowed;
 }
 
+
+/* MODAL */
+
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.78);
+  background: rgba(0, 0, 0, .78);
   display: none;
   align-items: center;
   justify-content: center;
@@ -665,6 +684,10 @@ td {
   font-size: 27px;
 }
 
+.modal-close:hover {
+  color: white;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -673,7 +696,7 @@ td {
 }
 
 
-/* ================= ANALYTICS ================= */
+/* ANALYTICS */
 
 .analytics-grid {
   display: grid;
@@ -706,7 +729,7 @@ td {
 }
 
 
-/* ================= RISK ================= */
+/* RISK */
 
 .risk-layout {
   display: grid;
@@ -739,7 +762,7 @@ td {
 }
 
 
-/* ================= CALENDAR ================= */
+/* CALENDAR */
 
 .calendar-controls {
   display: flex;
@@ -791,7 +814,7 @@ td {
 }
 
 
-/* ================= SETTINGS ================= */
+/* SETTINGS */
 
 .settings-grid {
   display: grid;
@@ -834,7 +857,7 @@ td {
 }
 
 
-/* ================= TOAST ================= */
+/* TOAST */
 
 .toast {
   position: fixed;
@@ -858,7 +881,7 @@ td {
 }
 
 
-/* ================= RESPONSIVE ================= */
+/* RESPONSIVE */
 
 @media (max-width: 1100px) {
 
