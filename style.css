@@ -1,1003 +1,2200 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+/* =========================================================
+   UjR Fx Trading Journal
+   STYLE
+========================================================= */
 
-  <title>UjR Fx Trading Journal</title>
+:root {
+  --bg: #08090c;
+  --bg2: #0d0f14;
+  --panel: #11141a;
+  --panel2: #151820;
 
-  <link rel="icon" href="logo.png">
-  <link rel="stylesheet" href="style.css">
-</head>
+  --border: rgba(255,255,255,.08);
 
-<body>
+  --text: #f3f4f6;
+  --muted: #8c929e;
 
-<!-- ================= LOGIN ================= -->
+  --gold: #d6ae55;
+  --gold2: #f0cf79;
 
-<section id="loginScreen" class="login-screen">
-  <div class="login-card">
+  --green: #36d399;
+  --red: #ff5c70;
+  --blue: #66a8ff;
 
-    <img src="logo.png" class="login-logo" alt="UjR Fx">
+  --shadow: 0 20px 60px rgba(0,0,0,.35);
 
-    <h1>UjR Fx</h1>
-    <p class="login-subtitle">Trading Journal</p>
+  --radius: 18px;
 
-    <button id="googleLoginBtn" class="google-login-btn">
-      <span class="google-icon">G</span>
-      <span>Continue with Google</span>
-    </button>
+  --sidebar-width: 250px;
+}
 
-    <p id="loginError" class="error-text"></p>
 
-  </div>
-</section>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 
-<!-- ================= APP ================= -->
+html {
+  scroll-behavior: smooth;
+}
 
-<div id="app" class="app hidden">
 
-  <!-- SIDEBAR -->
-  <aside id="sidebar" class="sidebar">
+body {
+  background:
+    radial-gradient(
+      circle at 20% 0%,
+      rgba(214,174,85,.06),
+      transparent 35%
+    ),
+    var(--bg);
 
-    <div class="sidebar-logo">
-      <img src="logo.png" alt="UjR Fx">
-      <div>
-        <strong>UjR Fx</strong>
-        <span>Trading Journal</span>
-      </div>
-    </div>
+  color: var(--text);
 
-    <nav class="sidebar-nav">
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 
-      <button class="nav-item active" data-page="dashboard">
-        <span>⌂</span>
-        <span>Dashboard</span>
-      </button>
+  min-height: 100vh;
+}
 
-      <button class="nav-item" data-page="journal">
-        <span>▤</span>
-        <span>Journal</span>
-      </button>
 
-      <button class="nav-item" data-page="analytics">
-        <span>◩</span>
-        <span>Analytics</span>
-      </button>
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
 
-      <button class="nav-item" data-page="risk">
-        <span>⌁</span>
-        <span>Risk Calculator</span>
-      </button>
 
-      <button class="nav-item" data-page="calendar">
-        <span>▦</span>
-        <span>Calendar</span>
-      </button>
+button {
+  cursor: pointer;
+}
 
-      <button class="nav-item" data-page="settings">
-        <span>⚙</span>
-        <span>Settings</span>
-      </button>
 
-    </nav>
+button:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
 
-    <div class="sidebar-user">
-      <img id="sidebarUserPhoto" src="logo.png" alt="User">
-      <div>
-        <strong id="sidebarUserName">Trader</strong>
-        <span id="sidebarUserEmail">---</span>
-      </div>
-    </div>
 
-  </aside>
+input,
+select,
+textarea {
+  width: 100%;
 
+  color: var(--text);
 
-  <!-- MAIN -->
-  <main class="main">
+  background: #0c0f14;
 
-    <!-- TOPBAR -->
-    <header class="topbar">
+  border: 1px solid var(--border);
 
-      <button id="menuToggle" class="menu-toggle">☰</button>
+  border-radius: 12px;
 
-      <div>
-        <strong id="pageTitle">Dashboard</strong>
-        <span id="pageSubtitle">Trading overview</span>
-      </div>
+  padding: 12px 13px;
 
-      <div class="topbar-user">
-        <img id="topUserPhoto" src="logo.png" alt="User">
-      </div>
+  outline: none;
 
-    </header>
+  transition: .2s ease;
+}
 
 
-    <!-- ================= DASHBOARD ================= -->
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(214,174,85,.7);
 
-    <section id="dashboardPage" class="page active-page">
+  box-shadow:
+    0 0 0 3px rgba(214,174,85,.08);
+}
 
-      <div class="page-header">
-        <div>
-          <h1>Dashboard</h1>
-          <p>Your trading performance at a glance.</p>
-        </div>
 
-        <button class="add-trade-btn page-add-trade">
-          <span class="plus">+</span>
-          <span class="label">Add Trade</span>
-        </button>
-      </div>
+textarea {
+  resize: vertical;
+}
 
-      <div class="metric-grid">
 
-        <div class="metric-card">
-          <span>Total Trades</span>
-          <strong id="dashTotalTrades">0</strong>
-        </div>
+select option {
+  background: #11141a;
+  color: #fff;
+}
 
-        <div class="metric-card">
-          <span>Win Rate</span>
-          <strong id="dashWinRate">0%</strong>
-        </div>
 
-        <div class="metric-card">
-          <span>Total P/L</span>
-          <strong id="dashTotalPL">$0.00</strong>
-        </div>
+.hidden {
+  display: none !important;
+}
 
-        <div class="metric-card">
-          <span>Profit Factor</span>
-          <strong id="dashProfitFactor">0.00</strong>
-        </div>
 
-        <div class="metric-card">
-          <span>Average RR</span>
-          <strong id="dashAverageRR">0.00R</strong>
-        </div>
+/* =========================================================
+   LOGIN
+========================================================= */
 
-        <div class="metric-card">
-          <span>Expectancy</span>
-          <strong id="dashExpectancy">$0.00</strong>
-        </div>
+.login-screen {
+  min-height: 100vh;
 
-        <div class="metric-card">
-          <span>Wins</span>
-          <strong id="dashWins">0</strong>
-        </div>
+  display: flex;
 
-        <div class="metric-card">
-          <span>Losses</span>
-          <strong id="dashLosses">0</strong>
-        </div>
+  align-items: center;
+  justify-content: center;
 
-      </div>
+  padding: 20px;
+}
 
 
-      <div class="content-grid">
+.login-card {
+  width: min(420px, 100%);
 
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Equity Curve</h2>
-              <p>Cumulative P/L</p>
-            </div>
-          </div>
+  padding: 42px 32px;
 
-          <div id="dashboardEquityChart" class="equity-chart">
-            <div class="empty-state">No trading data yet.</div>
-          </div>
-        </div>
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.04),
+      rgba(255,255,255,.015)
+    ),
+    var(--panel);
 
+  border: 1px solid var(--border);
 
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Recent Trades</h2>
-              <p>Latest activity</p>
-            </div>
-          </div>
+  border-radius: 24px;
 
-          <div id="recentTrades"></div>
-        </div>
+  box-shadow: var(--shadow);
 
-      </div>
+  text-align: center;
+}
 
-    </section>
 
+.login-logo {
+  width: 82px;
+  height: 82px;
 
-    <!-- ================= JOURNAL ================= -->
+  margin: 0 auto 20px;
 
-    <section id="journalPage" class="page">
+  border-radius: 22px;
 
-      <div class="page-header">
-        <div>
-          <h1>Trading Journal</h1>
-          <p>Record and review every trade.</p>
-        </div>
+  overflow: hidden;
 
-        <button class="add-trade-btn page-add-trade">
-          <span class="plus">+</span>
-          <span class="label">Add Trade</span>
-        </button>
-      </div>
+  border: 1px solid rgba(214,174,85,.3);
 
+  background: #090a0d;
+}
 
-      <div class="panel filters-panel">
 
-        <div class="filters">
+.login-logo img {
+  width: 100%;
+  height: 100%;
 
-          <label class="field">
-            <span>Result</span>
-            <select id="filterResult">
-              <option value="">All Results</option>
-              <option value="Win">Win</option>
-              <option value="Loss">Loss</option>
-              <option value="Break Even">Break Even</option>
-            </select>
-          </label>
+  object-fit: contain;
+}
 
-          <label class="field">
-            <span>Trading Type</span>
-            <select id="filterTradingType">
-              <option value="">All Types</option>
-              <option value="Scalping">Scalping</option>
-              <option value="Intraday">Intraday</option>
-              <option value="Swing">Swing</option>
-            </select>
-          </label>
 
-          <label class="field">
-            <span>Pair</span>
-            <select id="filterPair">
-              <option value="">All Pairs</option>
-            </select>
-          </label>
-
-          <label class="field">
-            <span>Date</span>
-            <input id="filterDate" type="date">
-          </label>
+.login-card h1 {
+  font-size: 34px;
+  letter-spacing: -.8px;
+}
 
-          <label class="field search-field">
-            <span>Search</span>
-            <input id="journalSearch" type="text" placeholder="Strategy, pair...">
-          </label>
 
-          <button id="clearFiltersBtn" class="secondary-btn">
-            Clear
-          </button>
+.login-subtitle {
+  color: var(--muted);
+  margin-top: 6px;
+  margin-bottom: 30px;
+}
 
-          <button id="exportCsvBtn" class="secondary-btn">
-            Export CSV
-          </button>
 
-        </div>
+.google-login-btn {
+  width: 100%;
 
-      </div>
+  min-height: 48px;
 
+  border: 1px solid var(--border);
 
-      <div class="panel table-panel">
+  background: #fff;
 
-        <div class="table-wrap">
-          <table>
+  color: #111;
 
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Pair</th>
-                <th>Type</th>
-                <th>Direction</th>
-                <th>Strategy</th>
-                <th>Entry</th>
-                <th>RR</th>
-                <th>Result</th>
-                <th>P/L</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody id="journalTableBody"></tbody>
-
-          </table>
-        </div>
-
-        <div id="journalEmpty" class="empty-state hidden">
-          No trades found.
-        </div>
-
-      </div>
-
-    </section>
-
-
-    <!-- ================= ANALYTICS ================= -->
-
-    <section id="analyticsPage" class="page">
-
-      <div class="page-header">
-        <div>
-          <h1>Analytics</h1>
-          <p>Detailed performance analysis.</p>
-        </div>
-
-        <button class="add-trade-btn page-add-trade">
-          <span class="plus">+</span>
-          <span class="label">Add Trade</span>
-        </button>
-      </div>
+  border-radius: 13px;
 
-
-      <div class="analytics-controls panel">
-
-        <label class="field">
-          <span>Analysis Period</span>
-          <select id="analyticsPeriod">
-            <option value="all">All Time</option>
-            <option value="7">Last 7 Days</option>
-            <option value="30">Last 30 Days</option>
-            <option value="month">This Month</option>
-            <option value="year">This Year</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span>Breakdown</span>
-          <select id="analyticsBreakdown">
-            <option value="pair">Pair</option>
-            <option value="tradingType">Trading Type</option>
-            <option value="strategy">Strategy</option>
-            <option value="session">Session</option>
-            <option value="direction">Direction</option>
-            <option value="bias">Market Bias</option>
-            <option value="emotion">Emotion</option>
-            <option value="result">Result</option>
-          </select>
-        </label>
+  display: flex;
 
-      </div>
-
-
-      <div class="metric-grid analytics-metrics">
-
-        <div class="metric-card">
-          <span>Total Trades</span>
-          <strong id="analyticsTrades">0</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Win Rate</span>
-          <strong id="analyticsWinRate">0%</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Total P/L</span>
-          <strong id="analyticsPL">$0.00</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Profit Factor</span>
-          <strong id="analyticsPF">0.00</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Average P/L</span>
-          <strong id="analyticsAvgPL">$0.00</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Average Win</span>
-          <strong id="analyticsAvgWin">$0.00</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Average Loss</span>
-          <strong id="analyticsAvgLoss">$0.00</strong>
-        </div>
+  align-items: center;
+  justify-content: center;
 
-        <div class="metric-card">
-          <span>Average RR</span>
-          <strong id="analyticsRR">0.00R</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Average Risk</span>
-          <strong id="analyticsRisk">$0.00</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Best Trade</span>
-          <strong id="analyticsBest">$0.00</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Worst Trade</span>
-          <strong id="analyticsWorst">$0.00</strong>
-        </div>
-
-        <div class="metric-card">
-          <span>Max Drawdown</span>
-          <strong id="analyticsDrawdown">$0.00</strong>
-        </div>
-
-      </div>
-
-
-      <div class="streak-grid">
-
-        <div class="streak-card">
-          <span>Current Win Streak</span>
-          <strong id="currentWinStreak">0</strong>
-        </div>
-
-        <div class="streak-card">
-          <span>Current Loss Streak</span>
-          <strong id="currentLossStreak">0</strong>
-        </div>
-
-        <div class="streak-card">
-          <span>Best Win Streak</span>
-          <strong id="bestWinStreak">0</strong>
-        </div>
-
-        <div class="streak-card">
-          <span>Best Loss Streak</span>
-          <strong id="bestLossStreak">0</strong>
-        </div>
-
-      </div>
-
-
-      <div class="analytics-grid">
-
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Performance Breakdown</h2>
-              <p id="breakdownTitle">By Pair</p>
-            </div>
-          </div>
+  gap: 10px;
 
-          <div class="analytics-table-wrap">
-            <table>
+  font-weight: 800;
 
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Trades</th>
-                  <th>Wins</th>
-                  <th>Losses</th>
-                  <th>Win Rate</th>
-                  <th>P/L</th>
-                </tr>
-              </thead>
-
-              <tbody id="breakdownBody"></tbody>
+  transition: .2s ease;
+}
 
-            </table>
-          </div>
-        </div>
 
+.google-login-btn:hover {
+  transform: translateY(-1px);
+}
 
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Result Distribution</h2>
-              <p>Win / Loss / Break Even</p>
-            </div>
-          </div>
 
-          <div id="resultDistribution"></div>
-        </div>
+.google-icon {
+  font-weight: 900;
+  font-size: 20px;
+}
 
-      </div>
 
+.login-footer {
+  margin-top: 24px;
 
-      <div class="analytics-grid">
+  font-size: 12px;
 
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Daily Performance</h2>
-              <p>Trading performance by date</p>
-            </div>
-          </div>
+  color: var(--muted);
+}
 
-          <div class="analytics-table-wrap">
-            <table>
-
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Trades</th>
-                  <th>Wins</th>
-                  <th>Losses</th>
-                  <th>P/L</th>
-                </tr>
-              </thead>
 
-              <tbody id="dailyPerformanceBody"></tbody>
+/* =========================================================
+   APP
+========================================================= */
 
-            </table>
-          </div>
-        </div>
+.app {
+  min-height: 100vh;
+}
 
 
-        <div class="panel">
-          <div class="panel-header">
-            <div>
-              <h2>Monthly Performance</h2>
-              <p>Monthly trading performance</p>
-            </div>
-          </div>
+/* =========================================================
+   SIDEBAR
+========================================================= */
 
-          <div class="analytics-table-wrap">
-            <table>
+.sidebar {
+  position: fixed;
 
-              <thead>
-                <tr>
-                  <th>Month</th>
-                  <th>Trades</th>
-                  <th>Wins</th>
-                  <th>Losses</th>
-                  <th>P/L</th>
-                </tr>
-              </thead>
+  inset: 0 auto 0 0;
 
-              <tbody id="monthlyPerformanceBody"></tbody>
+  width: var(--sidebar-width);
 
-            </table>
-          </div>
-        </div>
+  padding: 20px 14px;
 
-      </div>
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.025),
+      transparent
+    ),
+    #0a0c10;
 
-    </section>
+  border-right: 1px solid var(--border);
 
+  display: flex;
 
-    <!-- ================= RISK ================= -->
+  flex-direction: column;
 
-    <section id="riskPage" class="page">
+  z-index: 100;
+}
 
-      <div class="page-header">
-        <div>
-          <h1>Risk Calculator</h1>
-          <p>Plan your trade before entering.</p>
-        </div>
 
-        <button class="add-trade-btn page-add-trade">
-          <span class="plus">+</span>
-          <span class="label">Add Trade</span>
-        </button>
-      </div>
+.brand {
+  display: flex;
 
+  align-items: center;
 
-      <div class="risk-layout">
+  gap: 11px;
 
-        <div class="panel">
+  padding: 5px 10px 25px;
+}
 
-          <div class="form-grid">
 
-            <label class="field">
-              <span>Account Balance</span>
-              <input id="calcBalance" type="number" step="0.01" value="1000">
-            </label>
+.brand img {
+  width: 38px;
+  height: 38px;
 
-            <label class="field">
-              <span>Risk %</span>
-              <input id="calcRiskPercent" type="number" step="0.1" value="1">
-            </label>
+  object-fit: contain;
 
-            <label class="field">
-              <span>Direction</span>
-              <select id="calcDirection">
-                <option value="Buy">Buy</option>
-                <option value="Sell">Sell</option>
-              </select>
-            </label>
+  border-radius: 10px;
+}
 
-            <label class="field">
-              <span>Entry</span>
-              <input id="calcEntry" type="number" step="0.001">
-            </label>
 
-            <label class="field">
-              <span>Stop Loss</span>
-              <input id="calcSL" type="number" step="0.001">
-            </label>
+.brand strong {
+  display: block;
 
-            <label class="field">
-              <span>Take Profit</span>
-              <input id="calcTP" type="number" step="0.001">
-            </label>
+  font-size: 15px;
+}
 
-          </div>
 
-        </div>
+.brand span {
+  display: block;
 
+  color: var(--muted);
 
-        <div class="risk-results">
+  font-size: 11px;
 
-          <div class="metric-card">
-            <span>Risk Amount</span>
-            <strong id="calcRiskAmount">$0.00</strong>
-          </div>
+  margin-top: 2px;
+}
 
-          <div class="metric-card">
-            <span>Stop Distance</span>
-            <strong id="calcDistance">0.00</strong>
-          </div>
 
-          <div class="metric-card">
-            <span>Risk : Reward</span>
-            <strong id="calcRR">0.00</strong>
-          </div>
+.sidebar-nav {
+  display: flex;
 
-          <div class="metric-card">
-            <span>Approx. XAUUSD Lot</span>
-            <strong id="calcLot">0.00</strong>
-          </div>
+  flex-direction: column;
 
-        </div>
+  gap: 5px;
+}
 
-      </div>
 
-    </section>
+.nav-item {
+  width: 100%;
 
+  min-height: 45px;
 
-    <!-- ================= CALENDAR ================= -->
+  padding: 0 13px;
 
-    <section id="calendarPage" class="page">
+  border: 0;
 
-      <div class="page-header">
-        <div>
-          <h1>Calendar</h1>
-          <p>Daily trading activity.</p>
-        </div>
+  background: transparent;
 
-        <button class="add-trade-btn page-add-trade">
-          <span class="plus">+</span>
-          <span class="label">Add Trade</span>
-        </button>
-      </div>
+  color: var(--muted);
 
+  border-radius: 12px;
 
-      <div class="calendar-panel panel">
+  display: flex;
 
-        <div class="calendar-header">
+  align-items: center;
 
-          <button id="prevMonth" class="icon-btn">‹</button>
+  gap: 12px;
 
-          <h2 id="calendarMonth">Month</h2>
+  text-align: left;
 
-          <button id="nextMonth" class="icon-btn">›</button>
+  font-weight: 700;
 
-        </div>
+  font-size: 13px;
 
+  transition: .2s ease;
+}
 
-        <div class="calendar-weekdays">
 
-          <span>Sun</span>
-          <span>Mon</span>
-          <span>Tue</span>
-          <span>Wed</span>
-          <span>Thu</span>
-          <span>Fri</span>
-          <span>Sat</span>
+.nav-item:hover {
+  color: var(--text);
 
-        </div>
+  background: rgba(255,255,255,.04);
+}
 
 
-        <div id="calendarGrid" class="calendar-grid"></div>
+.nav-item.active {
+  color: #15120b;
 
-      </div>
+  background:
+    linear-gradient(
+      135deg,
+      var(--gold),
+      var(--gold2)
+    );
+}
 
 
-      <div id="selectedDateTrades" class="panel selected-date-panel">
+.nav-item span:first-child {
+  width: 20px;
 
-        <div class="panel-header">
-          <div>
-            <h2 id="selectedDateTitle">Select a date</h2>
-            <p>Trades for the selected day</p>
-          </div>
-        </div>
+  text-align: center;
 
-        <div id="selectedDateContent"></div>
+  font-size: 17px;
+}
 
-      </div>
 
-    </section>
+.sidebar-bottom {
+  margin-top: auto;
+}
 
 
-    <!-- ================= SETTINGS ================= -->
+.user-mini {
+  display: flex;
 
-    <section id="settingsPage" class="page">
+  gap: 10px;
 
-      <div class="page-header">
-        <div>
-          <h1>Settings</h1>
-          <p>Manage your journal settings.</p>
-        </div>
+  align-items: center;
 
-        <button class="add-trade-btn page-add-trade">
-          <span class="plus">+</span>
-          <span class="label">Add Trade</span>
-        </button>
-      </div>
+  padding: 13px;
 
+  border-top: 1px solid var(--border);
 
-      <div class="panel settings-panel">
+  border-bottom: 1px solid var(--border);
 
-        <div class="settings-profile">
+  margin-bottom: 10px;
+}
 
-          <img id="settingsPhoto" src="logo.png" alt="Profile">
 
-          <div>
-            <h2 id="settingsName">Trader</h2>
-            <p id="settingsEmail">---</p>
-          </div>
+.user-mini img {
+  width: 36px;
+  height: 36px;
 
-        </div>
+  border-radius: 50%;
 
+  object-fit: cover;
+}
 
-        <div class="form-grid">
 
-          <label class="field">
-            <span>Starting Balance</span>
-            <input id="startingBalance" type="number" step="0.01">
-          </label>
+.user-mini-info {
+  min-width: 0;
+}
 
-          <label class="field">
-            <span>Currency</span>
-            <select id="currency">
-              <option value="USD">USD</option>
-              <option value="NPR">NPR</option>
-              <option value="EUR">EUR</option>
-              <option value="GBP">GBP</option>
-            </select>
-          </label>
 
-        </div>
+.user-mini-info strong {
+  display: block;
 
+  font-size: 12px;
 
-        <div class="settings-actions">
+  overflow: hidden;
 
-          <button id="saveSettingsBtn" class="primary-btn">
-            Save Settings
-          </button>
+  white-space: nowrap;
 
-          <button id="logoutBtn" class="secondary-btn">
-            Sign Out
-          </button>
+  text-overflow: ellipsis;
+}
 
-        </div>
 
-        <p id="settingsMessage" class="success-text"></p>
+.user-mini-info span {
+  display: block;
 
-      </div>
+  font-size: 10px;
 
-    </section>
+  color: var(--muted);
 
-  </main>
+  overflow: hidden;
 
-</div>
+  white-space: nowrap;
 
+  text-overflow: ellipsis;
 
-<!-- ================= TRADE MODAL ================= -->
+  margin-top: 3px;
+}
 
-<div id="tradeModal" class="modal hidden">
 
-  <div class="modal-overlay"></div>
+.logout-btn {
+  width: 100%;
 
-  <div class="modal-card">
+  min-height: 42px;
 
-    <div class="modal-header">
+  border: 1px solid var(--border);
 
-      <div>
-        <h2 id="tradeModalTitle">Add Trade</h2>
-        <p>Record your trade details.</p>
-      </div>
+  border-radius: 11px;
 
-      <button id="closeTradeModal" class="close-btn">×</button>
+  background: transparent;
 
-    </div>
+  color: var(--muted);
 
+  font-weight: 700;
+}
 
-    <form id="tradeForm">
 
-      <div class="form-grid">
+.logout-btn:hover {
+  color: var(--red);
 
-        <label class="field">
-          <span>Trade ID</span>
-          <input id="tradeId" type="text" readonly>
-        </label>
+  border-color: rgba(255,92,112,.3);
+}
 
-        <label class="field">
-          <span>Date</span>
-          <input id="tradeDate" type="date" required>
-        </label>
 
-        <label class="field">
-          <span>Pair</span>
-          <input
-            id="pair"
-            type="text"
-            value="XAUUSD"
-            maxlength="20"
-            placeholder="XAUUSD"
-            required
-          >
-        </label>
+/* =========================================================
+   MAIN
+========================================================= */
 
-        <label class="field">
-          <span>Trading Type</span>
-          <select id="tradingType" required>
-            <option value="Scalping">Scalping</option>
-            <option value="Intraday">Intraday</option>
-            <option value="Swing">Swing</option>
-          </select>
-        </label>
+.main {
+  margin-left: var(--sidebar-width);
 
-        <label class="field">
-          <span>Direction</span>
-          <select id="direction">
-            <option value="Buy">Buy</option>
-            <option value="Sell">Sell</option>
-          </select>
-        </label>
+  min-height: 100vh;
+}
 
-        <label class="field">
-          <span>Strategy</span>
-          <select id="strategy">
-            <option value="Liquidity Sweep">Liquidity Sweep</option>
-            <option value="Order Block">Order Block</option>
-            <option value="FVG">FVG</option>
-            <option value="BOS">BOS</option>
-            <option value="CHoCH">CHoCH</option>
-            <option value="Breakout">Breakout</option>
-            <option value="Retest">Retest</option>
-            <option value="Previous High/Low">Previous High/Low</option>
-            <option value="Other">Other</option>
-          </select>
-        </label>
 
-        <label class="field">
-          <span>Session</span>
-          <select id="session">
-            <option value="Asian">Asian</option>
-            <option value="London">London</option>
-            <option value="New York">New York</option>
-            <option value="London + New York">London + New York</option>
-          </select>
-        </label>
+.topbar {
+  height: 68px;
 
-        <label class="field">
-          <span>Market Bias</span>
-          <select id="bias">
-            <option value="Bullish">Bullish</option>
-            <option value="Bearish">Bearish</option>
-            <option value="Neutral">Neutral</option>
-          </select>
-        </label>
+  padding: 0 30px;
 
-        <label class="field">
-          <span>Entry</span>
-          <input id="entry" type="number" step="0.001" required>
-        </label>
+  display: flex;
 
-        <label class="field">
-          <span>Stop Loss</span>
-          <input id="sl" type="number" step="0.001" required>
-        </label>
+  align-items: center;
 
-        <label class="field">
-          <span>Take Profit</span>
-          <input id="tp" type="number" step="0.001" required>
-        </label>
+  justify-content: flex-end;
 
-        <label class="field">
-          <span>RR</span>
-          <input id="rr" type="text" readonly>
-        </label>
+  border-bottom: 1px solid var(--border);
 
-        <label class="field">
-          <span>Risk Amount</span>
-          <input
-            id="riskAmount"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Enter risk amount"
-            required
-          >
-        </label>
+  background: rgba(8,9,12,.78);
 
-        <label class="field">
-          <span>Lot Size</span>
-          <input
-            id="lotSize"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Optional"
-          >
-        </label>
+  backdrop-filter: blur(15px);
 
-        <label class="field">
-          <span>Result</span>
-          <select id="result">
-            <option value="Win">Win</option>
-            <option value="Loss">Loss</option>
-            <option value="Break Even">Break Even</option>
-          </select>
-        </label>
+  position: sticky;
 
-        <label class="field">
-          <span>P/L</span>
-          <input
-            id="profitLoss"
-            type="number"
-            step="0.01"
-            placeholder="Enter P/L"
-            required
-          >
-        </label>
+  top: 0;
 
-        <label class="field">
-          <span>Confidence</span>
-          <select id="confidence">
-            <option value="1/5">1/5</option>
-            <option value="2/5">2/5</option>
-            <option value="3/5" selected>3/5</option>
-            <option value="4/5">4/5</option>
-            <option value="5/5">5/5</option>
-          </select>
-        </label>
+  z-index: 50;
+}
 
-        <label class="field">
-          <span>Emotion</span>
-          <select id="emotion">
-            <option value="Calm">Calm</option>
-            <option value="Confident">Confident</option>
-            <option value="Fearful">Fearful</option>
-            <option value="Greedy">Greedy</option>
-            <option value="FOMO">FOMO</option>
-            <option value="Revenge">Revenge</option>
-            <option value="Neutral">Neutral</option>
-          </select>
-        </label>
 
-        <label class="field full">
-          <span>Notes</span>
-          <textarea id="notes" rows="4" placeholder="What happened in this trade?"></textarea>
-        </label>
+.topbar-right {
+  display: flex;
+  align-items: center;
+}
 
-      </div>
 
+.top-user {
+  display: flex;
 
-      <p id="tradeError" class="error-text"></p>
+  align-items: center;
 
+  gap: 9px;
+}
 
-      <div class="modal-actions">
 
-        <button type="button" id="cancelTradeBtn" class="secondary-btn">
-          Cancel
-        </button>
+.top-user img {
+  width: 34px;
+  height: 34px;
 
-        <button type="submit" id="saveTradeBtn" class="primary-btn">
-          Save Trade
-        </button>
+  object-fit: cover;
 
-      </div>
+  border-radius: 50%;
+}
 
-    </form>
 
-  </div>
+.top-user strong {
+  display: block;
 
-</div>
+  font-size: 12px;
+}
 
 
-<script type="module" src="script.js"></script>
+.top-user span {
+  display: block;
 
-</body>
-</html>
+  color: var(--muted);
+
+  font-size: 10px;
+
+  margin-top: 2px;
+}
+
+
+.menu-toggle,
+.mobile-brand {
+  display: none;
+}
+
+
+/* =========================================================
+   PAGES
+========================================================= */
+
+.page {
+  display: none;
+
+  padding: 30px;
+
+  max-width: 1700px;
+
+  margin: 0 auto;
+}
+
+
+.page.active-page {
+  display: block;
+}
+
+
+.page-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 25px;
+}
+
+
+.eyebrow {
+  color: var(--gold2);
+
+  text-transform: uppercase;
+
+  letter-spacing: 1.5px;
+
+  font-size: 10px;
+
+  font-weight: 900;
+
+  margin-bottom: 5px;
+}
+
+
+.page-header h1 {
+  font-size: clamp(26px, 3vw, 38px);
+
+  letter-spacing: -1px;
+}
+
+
+.page-description {
+  color: var(--muted);
+
+  font-size: 13px;
+
+  margin-top: 5px;
+}
+
+
+/* =========================================================
+   BUTTONS
+========================================================= */
+
+.add-trade-btn {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 8px;
+
+  min-height: 42px;
+
+  padding: 10px 15px;
+
+  border: 1px solid rgba(214,174,85,.45);
+
+  border-radius: 12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--gold),
+      var(--gold2)
+    );
+
+  color: #111;
+
+  font-weight: 900;
+
+  font-size: 13px;
+
+  box-shadow:
+    0 8px 24px rgba(214,174,85,.16);
+
+  transition: .2s ease;
+}
+
+
+.add-trade-btn:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 12px 28px rgba(214,174,85,.25);
+}
+
+
+.add-trade-btn .plus {
+  font-size: 18px;
+  line-height: 1;
+}
+
+
+.primary-btn {
+  min-height: 43px;
+
+  padding: 10px 16px;
+
+  border: 1px solid rgba(214,174,85,.4);
+
+  border-radius: 11px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--gold),
+      var(--gold2)
+    );
+
+  color: #111;
+
+  font-weight: 900;
+}
+
+
+.secondary-btn {
+  min-height: 42px;
+
+  padding: 9px 13px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 11px;
+
+  background: rgba(255,255,255,.03);
+
+  color: var(--text);
+
+  font-weight: 700;
+}
+
+
+.secondary-btn:hover {
+  border-color: rgba(255,255,255,.16);
+
+  background: rgba(255,255,255,.06);
+}
+
+
+.full-btn {
+  width: 100%;
+  margin-top: 20px;
+}
+
+
+.icon-btn {
+  width: 38px;
+  height: 38px;
+
+  border: 1px solid var(--border);
+
+  background: rgba(255,255,255,.03);
+
+  color: var(--text);
+
+  border-radius: 10px;
+
+  font-size: 25px;
+}
+
+
+/* =========================================================
+   STAT CARDS
+========================================================= */
+
+.stats-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(6, minmax(0, 1fr));
+
+  gap: 13px;
+
+  margin-bottom: 13px;
+}
+
+
+.small-stats {
+  margin-bottom: 25px;
+}
+
+
+.stat-card {
+  min-width: 0;
+
+  padding: 17px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 15px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.012)
+    );
+}
+
+
+.stat-card span {
+  display: block;
+
+  color: var(--muted);
+
+  font-size: 11px;
+
+  font-weight: 700;
+
+  margin-bottom: 8px;
+}
+
+
+.stat-card strong {
+  display: block;
+
+  font-size: 20px;
+
+  letter-spacing: -.4px;
+}
+
+
+/* =========================================================
+   PANELS
+========================================================= */
+
+.panel {
+  min-width: 0;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.012)
+    );
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  box-shadow: 0 12px 40px rgba(0,0,0,.12);
+
+  overflow: hidden;
+}
+
+
+.panel-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 18px 19px;
+
+  border-bottom: 1px solid var(--border);
+}
+
+
+.panel-header h2 {
+  font-size: 15px;
+}
+
+
+.panel-header p {
+  color: var(--muted);
+
+  font-size: 11px;
+
+  margin-top: 4px;
+}
+
+
+.content-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.4fr)
+    minmax(300px, .8fr);
+
+  gap: 16px;
+}
+
+
+.analytics-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+
+  margin-top: 16px;
+}
+
+
+/* =========================================================
+   EQUITY
+========================================================= */
+
+.equity-chart {
+  min-height: 260px;
+
+  padding: 25px 20px;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  gap: 5px;
+
+  overflow-x: auto;
+}
+
+
+.equity-bar-wrap {
+  flex: 1;
+
+  min-width: 15px;
+
+  height: 205px;
+
+  position: relative;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  justify-content: center;
+}
+
+
+.equity-bar {
+  width: 100%;
+
+  max-width: 26px;
+
+  border-radius: 5px 5px 2px 2px;
+
+  min-height: 3px;
+
+  background: var(--gold);
+
+  opacity: .9;
+}
+
+
+.equity-bar.negative {
+  background: var(--red);
+}
+
+
+.equity-label {
+  position: absolute;
+
+  bottom: -20px;
+
+  font-size: 8px;
+
+  color: var(--muted);
+
+  white-space: nowrap;
+}
+
+
+.equity-value {
+  position: absolute;
+
+  top: -17px;
+
+  font-size: 8px;
+
+  color: var(--muted);
+
+  white-space: nowrap;
+}
+
+
+.no-chart {
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  color: var(--muted);
+
+  font-size: 13px;
+}
+
+
+/* =========================================================
+   RECENT TRADES
+========================================================= */
+
+.recent-trades {
+  padding: 8px 18px;
+}
+
+
+.recent-item {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 12px 0;
+
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+
+
+.recent-item:last-child {
+  border-bottom: 0;
+}
+
+
+.recent-main strong {
+  display: block;
+
+  font-size: 12px;
+}
+
+
+.recent-main span {
+  display: block;
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  margin-top: 3px;
+}
+
+
+.recent-pl {
+  font-size: 12px;
+
+  font-weight: 900;
+
+  white-space: nowrap;
+}
+
+
+.positive {
+  color: var(--green) !important;
+}
+
+
+.negative {
+  color: var(--red) !important;
+}
+
+
+.neutral {
+  color: var(--muted) !important;
+}
+
+
+/* =========================================================
+   FILTERS
+========================================================= */
+
+.filters-panel {
+  padding: 15px;
+
+  margin-bottom: 16px;
+}
+
+
+.filters {
+  display: grid;
+
+  grid-template-columns:
+    1.4fr
+    1fr
+    1fr
+    1fr
+    1fr
+    auto
+    auto;
+
+  gap: 10px;
+
+  align-items: end;
+}
+
+
+.filter-field,
+.analytics-toolbar label {
+  display: block;
+}
+
+
+.filter-field span,
+.analytics-toolbar label span {
+  display: block;
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  margin-bottom: 5px;
+}
+
+
+/* =========================================================
+   TABLES
+========================================================= */
+
+.table-panel {
+  overflow: hidden;
+}
+
+
+.table-wrapper {
+  width: 100%;
+
+  overflow-x: auto;
+}
+
+
+table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  min-width: 700px;
+}
+
+
+th,
+td {
+  padding: 13px 15px;
+
+  text-align: left;
+
+  border-bottom: 1px solid rgba(255,255,255,.05);
+
+  white-space: nowrap;
+}
+
+
+th {
+  color: var(--muted);
+
+  font-size: 9px;
+
+  text-transform: uppercase;
+
+  letter-spacing: .8px;
+
+  font-weight: 900;
+
+  background: rgba(255,255,255,.018);
+}
+
+
+td {
+  font-size: 11px;
+}
+
+
+tbody tr:hover {
+  background: rgba(255,255,255,.02);
+}
+
+
+.result-badge {
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 5px 8px;
+
+  border-radius: 7px;
+
+  font-size: 9px;
+
+  font-weight: 900;
+}
+
+
+.result-win {
+  color: var(--green);
+
+  background: rgba(54,211,153,.1);
+}
+
+
+.result-loss {
+  color: var(--red);
+
+  background: rgba(255,92,112,.1);
+}
+
+
+.result-be {
+  color: var(--muted);
+
+  background: rgba(255,255,255,.06);
+}
+
+
+.action-buttons {
+  display: flex;
+
+  gap: 5px;
+}
+
+
+.action-btn {
+  width: 30px;
+  height: 30px;
+
+  border-radius: 8px;
+
+  border: 1px solid var(--border);
+
+  background: rgba(255,255,255,.03);
+
+  color: var(--text);
+
+  font-size: 12px;
+}
+
+
+.action-btn.delete:hover {
+  color: var(--red);
+
+  border-color: rgba(255,92,112,.3);
+}
+
+
+.action-btn.edit:hover {
+  color: var(--gold2);
+
+  border-color: rgba(214,174,85,.3);
+}
+
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.empty-state {
+  min-height: 190px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+  justify-content: center;
+
+  text-align: center;
+
+  padding: 25px;
+
+  color: var(--muted);
+}
+
+
+.empty-state h3 {
+  color: var(--text);
+
+  font-size: 14px;
+
+  margin: 9px 0 4px;
+}
+
+
+.empty-state p {
+  font-size: 11px;
+}
+
+
+.empty-icon {
+  font-size: 30px;
+
+  opacity: .6;
+}
+
+
+/* =========================================================
+   ANALYTICS
+========================================================= */
+
+.analytics-toolbar {
+  display: flex;
+
+  justify-content: flex-end;
+
+  margin-bottom: 16px;
+}
+
+
+.analytics-toolbar label {
+  width: 190px;
+}
+
+
+.analytics-main-stats {
+  grid-template-columns:
+    repeat(8, minmax(0, 1fr));
+
+  margin-bottom: 16px;
+}
+
+
+.distribution {
+  padding: 25px 20px;
+}
+
+
+.distribution-row {
+  margin-bottom: 17px;
+}
+
+
+.distribution-row:last-child {
+  margin-bottom: 0;
+}
+
+
+.distribution-top {
+  display: flex;
+
+  justify-content: space-between;
+
+  margin-bottom: 6px;
+
+  font-size: 11px;
+}
+
+
+.distribution-top span:last-child {
+  color: var(--muted);
+}
+
+
+.progress {
+  height: 7px;
+
+  border-radius: 10px;
+
+  overflow: hidden;
+
+  background: rgba(255,255,255,.06);
+}
+
+
+.progress-fill {
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: var(--gold);
+}
+
+
+.progress-fill.loss {
+  background: var(--red);
+}
+
+
+.progress-fill.be {
+  background: #777;
+}
+
+
+/* =========================================================
+   RISK
+========================================================= */
+
+.risk-layout {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.3fr)
+    minmax(280px, .7fr);
+
+  gap: 16px;
+}
+
+
+.risk-layout > .panel {
+  padding: 0 0 20px;
+}
+
+
+.form-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 14px;
+
+  padding: 20px;
+}
+
+
+.one-column {
+  grid-template-columns: 1fr;
+}
+
+
+.field {
+  display: block;
+}
+
+
+.field > span {
+  display: block;
+
+  color: var(--muted);
+
+  font-size: 10px;
+
+  font-weight: 800;
+
+  margin-bottom: 6px;
+}
+
+
+.form-section {
+  border-bottom: 1px solid var(--border);
+}
+
+
+.form-section:last-of-type {
+  border-bottom: 0;
+}
+
+
+.form-section h3 {
+  padding: 17px 20px 0;
+
+  font-size: 12px;
+}
+
+
+.risk-results {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 13px;
+}
+
+
+.risk-result-card {
+  min-height: 150px;
+
+  padding: 20px;
+
+  display: flex;
+
+  flex-direction: column;
+
+  justify-content: center;
+
+  border: 1px solid var(--border);
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(214,174,85,.08),
+      rgba(255,255,255,.02)
+    );
+}
+
+
+.risk-result-card span {
+  color: var(--muted);
+
+  font-size: 11px;
+
+  margin-bottom: 10px;
+}
+
+
+.risk-result-card strong {
+  font-size: 23px;
+}
+
+
+/* =========================================================
+   CALENDAR
+========================================================= */
+
+.calendar-panel {
+  padding: 20px;
+}
+
+
+.calendar-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 20px;
+}
+
+
+.calendar-header h2 {
+  font-size: 17px;
+}
+
+
+.calendar-weekdays {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, 1fr);
+
+  gap: 7px;
+
+  margin-bottom: 7px;
+}
+
+
+.calendar-weekdays span {
+  color: var(--muted);
+
+  text-align: center;
+
+  font-size: 9px;
+
+  font-weight: 900;
+
+  text-transform: uppercase;
+}
+
+
+.calendar-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, 1fr);
+
+  gap: 7px;
+}
+
+
+.calendar-day {
+  min-height: 92px;
+
+  padding: 8px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 11px;
+
+  background: rgba(255,255,255,.018);
+
+  cursor: pointer;
+
+  transition: .2s ease;
+}
+
+
+.calendar-day:hover {
+  border-color: rgba(214,174,85,.35);
+}
+
+
+.calendar-day.muted-day {
+  opacity: .28;
+}
+
+
+.calendar-day.today {
+  border-color: rgba(214,174,85,.7);
+}
+
+
+.calendar-number {
+  font-size: 10px;
+
+  font-weight: 900;
+}
+
+
+.calendar-pl {
+  margin-top: 25px;
+
+  font-size: 11px;
+
+  font-weight: 900;
+}
+
+
+.calendar-count {
+  margin-top: 4px;
+
+  color: var(--muted);
+
+  font-size: 8px;
+}
+
+
+.calendar-details {
+  margin-top: 16px;
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+.settings-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.3fr)
+    minmax(280px, .7fr);
+
+  gap: 16px;
+}
+
+
+.profile-card {
+  display: flex;
+
+  align-items: center;
+
+  gap: 15px;
+
+  padding: 25px;
+}
+
+
+.profile-card img {
+  width: 65px;
+  height: 65px;
+
+  border-radius: 50%;
+
+  object-fit: cover;
+}
+
+
+.profile-card strong {
+  display: block;
+
+  font-size: 15px;
+}
+
+
+.profile-card span {
+  display: block;
+
+  color: var(--muted);
+
+  font-size: 11px;
+
+  margin-top: 4px;
+}
+
+
+.success-text {
+  color: var(--green);
+
+  font-size: 11px;
+
+  margin: 10px 20px;
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.modal {
+  position: fixed;
+
+  inset: 0;
+
+  z-index: 500;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  padding: 20px;
+}
+
+
+.modal-backdrop {
+  position: absolute;
+
+  inset: 0;
+
+  background: rgba(0,0,0,.72);
+
+  backdrop-filter: blur(6px);
+}
+
+
+.modal-card {
+  position: relative;
+
+  width: min(850px, 100%);
+
+  max-height: calc(100vh - 40px);
+
+  overflow-y: auto;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.04),
+      rgba(255,255,255,.012)
+    ),
+    #0d1015;
+
+  border: 1px solid var(--border);
+
+  border-radius: 20px;
+
+  box-shadow: var(--shadow);
+}
+
+
+.modal-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  padding: 20px;
+
+  border-bottom: 1px solid var(--border);
+}
+
+
+.modal-header h2 {
+  font-size: 20px;
+}
+
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+
+  border: 1px solid var(--border);
+
+  background: transparent;
+
+  color: var(--muted);
+
+  border-radius: 9px;
+
+  font-size: 23px;
+}
+
+
+.modal-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding: 20px;
+
+  border-top: 1px solid var(--border);
+}
+
+
+.error-text {
+  color: var(--red);
+
+  font-size: 11px;
+
+  margin: 10px 20px;
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+.toast {
+  position: fixed;
+
+  left: 50%;
+
+  bottom: 25px;
+
+  transform:
+    translate(-50%, 100px);
+
+  opacity: 0;
+
+  z-index: 1000;
+
+  padding: 12px 16px;
+
+  border-radius: 11px;
+
+  background: #181c24;
+
+  border: 1px solid var(--border);
+
+  color: var(--text);
+
+  font-size: 12px;
+
+  font-weight: 800;
+
+  box-shadow: var(--shadow);
+
+  transition: .25s ease;
+}
+
+
+.toast.show {
+  transform:
+    translate(-50%, 0);
+
+  opacity: 1;
+}
+
+
+/* =========================================================
+   SIDEBAR MOBILE
+========================================================= */
+
+.sidebar-overlay {
+  display: none;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1250px) {
+
+  .stats-grid {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  .analytics-main-stats {
+    grid-template-columns:
+      repeat(4, minmax(0, 1fr));
+  }
+
+  .filters {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+}
+
+
+@media (max-width: 950px) {
+
+  .sidebar {
+    transform: translateX(-100%);
+
+    transition: .25s ease;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 90;
+
+    background: rgba(0,0,0,.65);
+  }
+
+  .sidebar-overlay.show {
+    display: block;
+  }
+
+  .main {
+    margin-left: 0;
+  }
+
+  .topbar {
+    justify-content: space-between;
+
+    padding: 0 17px;
+  }
+
+  .menu-toggle {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 39px;
+    height: 39px;
+
+    border: 1px solid var(--border);
+
+    border-radius: 10px;
+
+    background: rgba(255,255,255,.03);
+
+    color: var(--text);
+
+    font-size: 18px;
+  }
+
+  .mobile-brand {
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    font-weight: 900;
+
+    font-size: 13px;
+  }
+
+  .mobile-brand img {
+    width: 30px;
+    height: 30px;
+
+    object-fit: contain;
+
+    border-radius: 8px;
+  }
+
+  .content-grid,
+  .risk-layout,
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+@media (max-width: 680px) {
+
+  .page {
+    padding: 18px 13px 30px;
+  }
+
+
+  .topbar {
+    height: 60px;
+  }
+
+
+  .top-user div {
+    display: none;
+  }
+
+
+  .page-header {
+    align-items: flex-start;
+
+    margin-bottom: 18px;
+  }
+
+
+  .page-header h1 {
+    font-size: 27px;
+  }
+
+
+  .page-description {
+    font-size: 11px;
+  }
+
+
+  .page-header .add-trade-btn {
+    min-height: 40px;
+
+    padding: 9px 12px;
+
+    border-radius: 11px;
+  }
+
+
+  .page-header .add-trade-btn .label {
+    display: none;
+  }
+
+
+  .stats-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 9px;
+  }
+
+
+  .analytics-main-stats {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+
+  .stat-card {
+    padding: 13px;
+
+    border-radius: 13px;
+  }
+
+
+  .stat-card span {
+    font-size: 9px;
+  }
+
+
+  .stat-card strong {
+    font-size: 17px;
+  }
+
+
+  .content-grid,
+  .analytics-grid {
+    gap: 11px;
+  }
+
+
+  .analytics-grid {
+    grid-template-columns: 1fr;
+  }
+
+
+  .filters {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+
+  .filters .filter-field:first-child {
+    grid-column: 1 / -1;
+  }
+
+
+  .filters .secondary-btn {
+    width: 100%;
+  }
+
+
+  .form-grid {
+    grid-template-columns: 1fr;
+
+    padding: 15px;
+  }
+
+
+  .form-section h3 {
+    padding: 15px 15px 0;
+  }
+
+
+  .risk-results {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+
+  .risk-result-card {
+    min-height: 125px;
+
+    padding: 15px;
+  }
+
+
+  .risk-result-card strong {
+    font-size: 18px;
+  }
+
+
+  .calendar-panel {
+    padding: 10px;
+  }
+
+
+  .calendar-grid,
+  .calendar-weekdays {
+    gap: 4px;
+  }
+
+
+  .calendar-day {
+    min-height: 65px;
+
+    padding: 5px;
+
+    border-radius: 7px;
+  }
+
+
+  .calendar-pl {
+    margin-top: 15px;
+
+    font-size: 8px;
+  }
+
+
+  .calendar-count {
+    font-size: 7px;
+  }
+
+
+  .calendar-weekdays span {
+    font-size: 7px;
+  }
+
+
+  .modal {
+    padding: 0;
+  }
+
+
+  .modal-card {
+    width: 100%;
+
+    height: 100%;
+
+    max-height: 100vh;
+
+    border-radius: 0;
+  }
+
+
+  .modal-header {
+    padding: 16px;
+  }
+
+
+  .modal-actions {
+    position: sticky;
+
+    bottom: 0;
+
+    background: #0d1015;
+
+    padding: 14px;
+  }
+
+
+  .modal-actions button {
+    flex: 1;
+  }
+
+
+  .login-card {
+    padding: 35px 20px;
+  }
+
+}
+
+
+@media (max-width: 420px) {
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .filters .filter-field:first-child {
+    grid-column: auto;
+  }
+
+  .risk-results {
+    grid-template-columns: 1fr;
+  }
+
+}
