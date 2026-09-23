@@ -29,7 +29,7 @@ import {
 ========================================================= */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAdCB2Vke4iXLm1zPj43cNQwC65GZlQ6Ns",
+  apiKey: "AIzaSyAdCB2Vke4iXLm1zPj43cNQwC65gZlQ6Ns",
   authDomain: "journal-38e0e.firebaseapp.com",
   databaseURL: "https://journal-38e0e-default-rtdb.firebaseio.com",
   projectId: "journal-38e0e",
