@@ -1,1128 +1,3595 @@
-:root {
-  --bg: #08090c;
-  --bg2: #0d0f14;
-  --panel: #11141a;
-  --panel2: #151820;
-  --border: rgba(255,255,255,.08);
-  --text: #f3f4f6;
-  --muted: #8c929e;
-  --gold: #d6ae55;
-  --gold2: #f0cf79;
-  --green: #36d399;
-  --red: #ff5c70;
-  --blue: #66a8ff;
-  --shadow: 0 20px 60px rgba(0,0,0,.35);
-  --radius: 18px;
+/* =========================================================
+   UjR Fx Trading Journal
+   Firebase + Advanced Analytics
+   ========================================================= */
+
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+  getRedirectResult
+} from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  where,
+  serverTimestamp,
+  setDoc,
+  getDoc
+} from
+  "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+
+/* =========================================================
+   FIREBASE
+   ========================================================= */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAdCB2Vke4iXLm1zPj43cNQwC65gZlQ6Ns",
+  authDomain: "journal-38e0e.firebaseapp.com",
+  databaseURL: "https://journal-38e0e-default-rtdb.firebaseio.com",
+  projectId: "journal-38e0e",
+  storageBucket: "journal-38e0e.firebasestorage.app",
+  messagingSenderId: "382226906837",
+  appId: "1:382226906837:web:38df881c0f7beb24256c5c",
+  measurementId: "G-R6LXDMQ9K2"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const provider = new GoogleAuthProvider();
+
+provider.setCustomParameters({
+  prompt: "select_account"
+});
+
+
+/* =========================================================
+   STATE
+   ========================================================= */
+
+const state = {
+  user: null,
+  trades: [],
+  currency: "USD",
+  startingBalance: 0,
+  currentPage: "dashboardPage",
+  editingTrade: null,
+  calendarDate: new Date(),
+  selectedCalendarDate: null
+};
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+
+const $ = id => document.getElementById(id);
+
+function num(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
 }
 
-* {
-  box-sizing: border-box;
+function money(value) {
+
+  const amount = num(value);
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: state.currency || "USD",
+    maximumFractionDigits: 2
+  }).format(amount);
+
 }
 
-html {
-  scroll-behavior: smooth;
+function escapeHTML(value) {
+
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
 }
 
-body {
-  margin: 0;
-  background:
-    radial-gradient(circle at top right, rgba(214,174,85,.07), transparent 28%),
-    var(--bg);
-  color: var(--text);
-  font-family: Inter, Arial, sans-serif;
-  min-height: 100vh;
+function formatDate(date) {
+
+  if (!date) return "";
+
+  const d = new Date(`${date}T12:00:00`);
+
+  if (Number.isNaN(d.getTime())) return date;
+
+  return d.toLocaleDateString();
+
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
+function todayString() {
+
+  const d = new Date();
+
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${y}-${m}-${day}`;
+
 }
 
-button {
-  cursor: pointer;
-}
+function generateTradeId() {
 
-.hidden {
-  display: none !important;
-}
+  const date = new Date();
 
+  const stamp =
+    date.getFullYear().toString() +
+    String(date.getMonth() + 1).padStart(2, "0") +
+    String(date.getDate()).padStart(2, "0");
 
-/* ================= LOGIN ================= */
+  const random = Math.floor(1000 + Math.random() * 9000);
 
-.login-screen {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 20px;
-}
+  return `UJ-${stamp}-${random}`;
 
-.login-card {
-  width: min(420px, 100%);
-  background: rgba(17,20,26,.92);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 40px 30px;
-  text-align: center;
-  box-shadow: var(--shadow);
-}
-
-.login-logo {
-  width: 90px;
-  height: 90px;
-  object-fit: contain;
-  border-radius: 22px;
-  margin-bottom: 15px;
-}
-
-.login-card h1 {
-  margin: 0;
-  font-size: 30px;
-}
-
-.login-card p {
-  margin: 7px 0 28px;
-  color: var(--muted);
-}
-
-.google-btn {
-  width: 100%;
-  min-height: 48px;
-  border-radius: 13px;
-  border: 1px solid var(--border);
-  background: #fff;
-  color: #111;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  font-weight: 800;
-}
-
-.google-icon {
-  font-size: 20px;
-  font-weight: 900;
-}
-
-
-/* ================= APP ================= */
-
-.app {
-  min-height: 100vh;
-  display: flex;
-}
-
-.sidebar {
-  width: 250px;
-  flex-shrink: 0;
-  background: rgba(13,15,20,.96);
-  border-right: 1px solid var(--border);
-  padding: 20px 14px;
-  display: flex;
-  flex-direction: column;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-}
-
-.brand,
-.mobile-brand {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-.brand img,
-.mobile-brand img {
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
-  border-radius: 12px;
-}
-
-.brand div,
-.mobile-brand div {
-  display: flex;
-  flex-direction: column;
-}
-
-.brand strong,
-.mobile-brand strong {
-  font-size: 15px;
-}
-
-.brand span,
-.mobile-brand span {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-
-.nav {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 32px;
-}
-
-.nav-btn {
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--muted);
-  min-height: 44px;
-  border-radius: 12px;
-  padding: 10px 13px;
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  font-weight: 700;
-}
-
-.nav-btn:hover {
-  color: var(--text);
-  background: rgba(255,255,255,.035);
-}
-
-.nav-btn.active {
-  color: #111;
-  background: linear-gradient(135deg,var(--gold),var(--gold2));
-}
-
-.sidebar-bottom {
-  margin-top: auto;
-}
-
-.user-mini {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 12px;
-  background: rgba(255,255,255,.025);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-}
-
-.user-mini img {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.user-mini div {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.user-mini strong {
-  font-size: 12px;
-}
-
-.user-mini span {
-  color: var(--muted);
-  font-size: 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.logout-btn {
-  width: 100%;
-  margin-top: 9px;
-  border: 1px solid rgba(255,92,112,.2);
-  background: rgba(255,92,112,.07);
-  color: var(--red);
-  border-radius: 11px;
-  min-height: 40px;
-  font-weight: 700;
 }
 
 
-/* ================= MAIN ================= */
+/* =========================================================
+   AUTH
+   ========================================================= */
 
-.main {
-  flex: 1;
-  min-width: 0;
-  padding: 28px;
+$("googleLoginBtn").addEventListener("click", async () => {
+
+  const button = $("googleLoginBtn");
+
+  button.disabled = true;
+
+  button.innerHTML = `
+    <span class="google-icon">G</span>
+    <span>Signing in...</span>
+  `;
+
+  $("loginError").textContent = "";
+
+  try {
+
+    await signInWithPopup(auth, provider);
+
+  } catch (error) {
+
+    console.error("Google Login Error:", error);
+
+    if (error.code === "auth/popup-blocked") {
+
+      $("loginError").textContent =
+        "Popup was blocked. Allow popups for this website.";
+
+    } else if (error.code === "auth/popup-closed-by-user") {
+
+      $("loginError").textContent =
+        "Login window was closed.";
+
+    } else if (error.code === "auth/unauthorized-domain") {
+
+      $("loginError").textContent =
+        "This website domain is not authorized in Firebase.";
+
+    } else if (error.code === "auth/operation-not-allowed") {
+
+      $("loginError").textContent =
+        "Google login is not enabled in Firebase.";
+
+    } else if (error.code === "auth/network-request-failed") {
+
+      $("loginError").textContent =
+        "Network error. Check your internet connection.";
+
+    } else {
+
+      $("loginError").textContent =
+        error.message || "Google login failed.";
+
+    }
+
+  } finally {
+
+    button.disabled = false;
+
+    button.innerHTML = `
+      <span class="google-icon">G</span>
+      <span>Continue with Google</span>
+    `;
+
+  }
+
+});
+
+
+getRedirectResult(auth).catch(error => {
+
+  if (error) {
+    console.error("Redirect auth error:", error);
+  }
+
+});
+
+
+$("logoutBtn").addEventListener("click", () => signOut(auth));
+
+$("mobileLogoutBtn").addEventListener("click", () => signOut(auth));
+
+
+onAuthStateChanged(auth, async user => {
+
+  if (user) {
+
+    state.user = user;
+
+    $("loginScreen").classList.add("hidden");
+    $("app").classList.remove("hidden");
+
+    updateUserUI();
+
+    await loadUserData();
+
+  } else {
+
+    state.user = null;
+    state.trades = [];
+
+    $("loginScreen").classList.remove("hidden");
+    $("app").classList.add("hidden");
+
+  }
+
+});
+
+
+/* =========================================================
+   USER UI
+   ========================================================= */
+
+function updateUserUI() {
+
+  if (!state.user) return;
+
+  const name =
+    state.user.displayName ||
+    state.user.email?.split("@")[0] ||
+    "Trader";
+
+  const email =
+    state.user.email || "---";
+
+  const photo =
+    state.user.photoURL || "logo.png";
+
+  $("sidebarUserName").textContent = name;
+  $("sidebarUserEmail").textContent = email;
+
+  $("sidebarUserPhoto").src = photo;
+
+  $("settingsName").textContent = name;
+  $("settingsEmail").textContent = email;
+
+  $("settingsPhoto").src = photo;
+
 }
 
-.mobile-header,
-.mobile-nav {
-  display: none;
-}
 
-.page {
-  display: none;
-  max-width: 1500px;
-  margin: auto;
-}
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
 
-.page.active-page {
-  display: block;
-}
+document.querySelectorAll(".nav-btn").forEach(button => {
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 20px;
-  margin-bottom: 24px;
-}
+  button.addEventListener("click", () => {
 
-.eyebrow {
-  color: var(--gold2);
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  font-weight: 900;
-}
+    showPage(button.dataset.page);
 
-.page-header h1 {
-  margin: 5px 0;
-  font-size: clamp(25px, 3vw, 36px);
-}
+    $("mobileNav").classList.remove("open");
 
-.page-header p {
-  margin: 0;
-  color: var(--muted);
-}
+  });
+
+});
 
 
-/* ================= BUTTONS ================= */
+document.querySelectorAll("[data-page-target]").forEach(button => {
 
-.add-trade-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 42px;
-  padding: 10px 15px;
-  border: 1px solid rgba(214,174,85,.45);
-  border-radius: 12px;
-  background: linear-gradient(135deg,var(--gold),var(--gold2));
-  color: #111;
-  font-weight: 900;
-  font-size: 13px;
-  box-shadow: 0 8px 24px rgba(214,174,85,.16);
-}
+  button.addEventListener("click", () => {
 
-.primary-btn {
-  border: 0;
-  background: linear-gradient(135deg,var(--gold),var(--gold2));
-  color: #111;
-  border-radius: 11px;
-  min-height: 42px;
-  padding: 10px 16px;
-  font-weight: 900;
-}
+    showPage(button.dataset.pageTarget);
 
-.secondary-btn,
-.quick-btn {
-  border: 1px solid var(--border);
-  background: var(--panel2);
-  color: var(--text);
-  border-radius: 11px;
-  min-height: 42px;
-  padding: 9px 14px;
-  font-weight: 700;
-}
+  });
 
-.secondary-btn:hover,
-.quick-btn:hover {
-  border-color: rgba(214,174,85,.35);
+});
+
+
+function showPage(pageId) {
+
+  document.querySelectorAll(".page").forEach(page => {
+
+    page.classList.remove("active-page");
+
+  });
+
+  const page = $(pageId);
+
+  if (page) {
+
+    page.classList.add("active-page");
+
+  }
+
+  document.querySelectorAll(".nav-btn").forEach(button => {
+
+    button.classList.toggle(
+      "active",
+      button.dataset.page === pageId
+    );
+
+  });
+
+  state.currentPage = pageId;
+
+  if (pageId === "dashboardPage") {
+    renderDashboard();
+  }
+
+  if (pageId === "journalPage") {
+    renderJournal();
+  }
+
+  if (pageId === "analyticsPage") {
+    renderAnalytics();
+  }
+
+  if (pageId === "calendarPage") {
+    renderCalendar();
+  }
+
 }
 
 
-/* ================= PANELS ================= */
+$("mobileMenuBtn").addEventListener("click", () => {
 
-.panel {
-  background: rgba(17,20,26,.88);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 10px 35px rgba(0,0,0,.12);
+  $("mobileNav").classList.toggle("open");
+
+});
+
+
+/* =========================================================
+   ADD TRADE BUTTONS
+   ========================================================= */
+
+document.querySelectorAll(".add-trade-btn").forEach(button => {
+
+  button.addEventListener("click", openAddTradeModal);
+
+});
+
+
+function openAddTradeModal() {
+
+  state.editingTrade = null;
+
+  $("tradeForm").reset();
+
+  $("tradeModalTitle").textContent = "Add Trade";
+  $("saveTradeBtn").textContent = "Save Trade";
+
+  $("editingTradeId").value = "";
+  $("tradeId").value = generateTradeId();
+  $("tradeDate").value = todayString();
+
+  $("pair").value = "XAUUSD";
+
+  $("rr").value = "";
+
+  $("tradeError").textContent = "";
+
+  $("tradeModal").classList.remove("hidden");
+
 }
 
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 18px;
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+$("closeTradeModal").addEventListener(
+  "click",
+  closeTradeModal
+);
+
+$("cancelTradeBtn").addEventListener(
+  "click",
+  closeTradeModal
+);
+
+$("tradeModal").addEventListener("click", event => {
+
+  if (event.target === $("tradeModal")) {
+
+    closeTradeModal();
+
+  }
+
+});
+
+
+function closeTradeModal() {
+
+  $("tradeModal").classList.add("hidden");
+
+  state.editingTrade = null;
+
 }
 
-.panel-header h2 {
-  margin: 0;
-  font-size: 16px;
+
+/* =========================================================
+   RR
+   ========================================================= */
+
+function calculateTradeRR() {
+
+  const entry = num($("entry").value);
+  const sl = num($("sl").value);
+  const tp = num($("tp").value);
+  const direction = $("direction").value;
+
+  if (entry <= 0 || sl <= 0 || tp <= 0) {
+
+    $("rr").value = "";
+
+    return 0;
+
+  }
+
+  let risk = 0;
+  let reward = 0;
+
+  if (direction === "Buy") {
+
+    risk = entry - sl;
+    reward = tp - entry;
+
+  } else {
+
+    risk = sl - entry;
+    reward = entry - tp;
+
+  }
+
+  if (risk <= 0 || reward <= 0) {
+
+    $("rr").value = "Invalid";
+
+    return 0;
+
+  }
+
+  const rr = reward / risk;
+
+  $("rr").value = `1:${rr.toFixed(2)}`;
+
+  return rr;
+
 }
 
-.panel-header span {
-  display: block;
-  color: var(--muted);
-  font-size: 12px;
-  margin-top: 4px;
-}
 
+["entry", "sl", "tp", "direction"].forEach(id => {
 
-/* ================= STATS ================= */
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(6,1fr);
-  gap: 13px;
-  margin-bottom: 20px;
-}
-
-.stat-card,
-.analytics-card,
-.streak-card,
-.risk-result-card {
-  background: linear-gradient(
-    145deg,
-    rgba(255,255,255,.035),
-    rgba(255,255,255,.015)
+  $(id).addEventListener(
+    "input",
+    calculateTradeRR
   );
-  border: 1px solid var(--border);
-  border-radius: 15px;
-  padding: 17px;
-}
 
-.stat-card span,
-.analytics-card span,
-.streak-card span,
-.risk-result-card span {
-  color: var(--muted);
-  font-size: 11px;
-  display: block;
-}
+  $(id).addEventListener(
+    "change",
+    calculateTradeRR
+  );
 
-.stat-card strong,
-.analytics-card strong,
-.streak-card strong,
-.risk-result-card strong {
-  display: block;
-  font-size: 21px;
-  margin-top: 7px;
-}
+});
 
 
-/* ================= GRIDS ================= */
+/* =========================================================
+   P/L
+   ========================================================= */
 
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 20px;
-}
+function normalizeProfitLossByResult() {
 
-.analytics-grid {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 20px;
-}
+  const result = $("result").value;
+  const input = $("profitLoss");
 
-.chart-panel {
-  min-height: 390px;
-}
+  if (result === "Break Even") {
 
-canvas {
-  width: 100% !important;
-  height: 310px !important;
-  display: block;
-}
+    input.value = "0";
 
-.quick-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
+    return;
 
-
-/* ================= ANALYTICS ================= */
-
-.analytics-controls {
-  display: flex;
-  gap: 14px;
-  align-items: flex-end;
-  flex-wrap: wrap;
-}
-
-.analytics-controls .field {
-  min-width: 190px;
-}
-
-.analytics-stats {
-  display: grid;
-  grid-template-columns: repeat(4,1fr);
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.streak-grid {
-  display: grid;
-  grid-template-columns: repeat(4,1fr);
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.large-chart {
-  min-height: 390px;
-}
-
-
-/* ================= FORMS ================= */
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2,minmax(0,1fr));
-  gap: 14px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.field.full {
-  grid-column: 1 / -1;
-}
-
-.field > span {
-  font-size: 11px;
-  color: var(--muted);
-  font-weight: 700;
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  min-height: 43px;
-  background: #0b0d11;
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 10px 12px;
-  outline: none;
-}
-
-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: rgba(214,174,85,.55);
-  box-shadow: 0 0 0 3px rgba(214,174,85,.07);
-}
-
-input[readonly] {
-  opacity: .7;
-}
-
-
-/* ================= JOURNAL FILTER ================= */
-
-.filter-panel {
-  display: grid;
-  grid-template-columns: 1.5fr repeat(3,1fr) auto;
-  gap: 12px;
-  align-items: end;
-  background: rgba(17,20,26,.88);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 15px;
-  margin-bottom: 20px;
-}
-
-
-/* ================= TABLE ================= */
-
-.table-wrap {
-  width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-
-  scrollbar-width: none;
-}
-
-.table-wrap::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.data-table th {
-  color: var(--muted);
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  text-align: left;
-  padding: 11px 10px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-
-.data-table td {
-  padding: 12px 10px;
-  border-bottom: 1px solid rgba(255,255,255,.045);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.data-table tbody tr:hover {
-  background: rgba(255,255,255,.025);
-}
-
-.analytics-table {
-  min-width: 760px;
-}
-
-.result-win {
-  color: var(--green);
-  font-weight: 800;
-}
-
-.result-loss {
-  color: var(--red);
-  font-weight: 800;
-}
-
-.result-be {
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.pl-positive {
-  color: var(--green);
-  font-weight: 800;
-}
-
-.pl-negative {
-  color: var(--red);
-  font-weight: 800;
-}
-
-.action-btn {
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text);
-  border-radius: 8px;
-  padding: 5px 8px;
-  font-size: 11px;
-}
-
-.action-btn.delete {
-  color: var(--red);
-}
-
-
-/* ================= RECENT TRADES ================= */
-
-.recent-trades {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 310px;
-  overflow-y: auto;
-}
-
-.recent-trade {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 11px;
-  background: rgba(255,255,255,.025);
-  border: 1px solid rgba(255,255,255,.05);
-  border-radius: 11px;
-}
-
-.recent-trade-left {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.recent-trade-left strong {
-  font-size: 12px;
-}
-
-.recent-trade-left span {
-  color: var(--muted);
-  font-size: 10px;
-}
-
-
-/* ================= RISK ================= */
-
-.risk-layout {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-
-.risk-results {
-  display: grid;
-  grid-template-columns: repeat(2,1fr);
-  gap: 13px;
-  align-content: start;
-}
-
-
-/* ================= CALENDAR ================= */
-
-.calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 15px;
-}
-
-.calendar-header h2 {
-  min-width: 200px;
-  text-align: center;
-}
-
-.icon-btn {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--panel2);
-  color: var(--text);
-  font-size: 23px;
-}
-
-.calendar-weekdays,
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7,1fr);
-  gap: 6px;
-}
-
-.calendar-weekdays span {
-  text-align: center;
-  color: var(--muted);
-  font-size: 10px;
-  padding: 8px 0;
-  text-transform: uppercase;
-}
-
-.calendar-day {
-  min-height: 95px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: rgba(255,255,255,.018);
-  padding: 9px;
-  cursor: pointer;
-}
-
-.calendar-day:hover {
-  border-color: rgba(214,174,85,.4);
-}
-
-.calendar-day.empty {
-  opacity: .25;
-  cursor: default;
-}
-
-.calendar-day.today {
-  border-color: var(--gold);
-}
-
-.calendar-number {
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.calendar-pl {
-  margin-top: 16px;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.calendar-trades {
-  color: var(--muted);
-  font-size: 9px;
-  margin-top: 3px;
-}
-
-
-/* ================= SETTINGS ================= */
-
-.settings-panel {
-  max-width: 800px;
-}
-
-.profile-panel {
-  max-width: 800px;
-}
-
-.profile-info {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.profile-info img {
-  width: 65px;
-  height: 65px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.profile-info div {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.profile-info span {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.success-text {
-  color: var(--green);
-  font-size: 12px;
-  margin-top: 10px;
-}
-
-.error-text {
-  color: var(--red);
-  font-size: 12px;
-  margin-top: 10px;
-}
-
-
-/* ================= MODAL ================= */
-
-.modal {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0,0,0,.78);
-  backdrop-filter: blur(8px);
-  display: grid;
-  place-items: center;
-  padding: 20px;
-}
-
-.modal-card {
-  width: min(900px,100%);
-  max-height: 92vh;
-  overflow-y: auto;
-  background: #101319;
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 22px;
-  box-shadow: var(--shadow);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 20px;
-}
-
-.modal-header h2 {
-  margin: 5px 0 0;
-}
-
-.close-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--border);
-  background: var(--panel2);
-  color: var(--text);
-  border-radius: 9px;
-  font-size: 22px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-
-/* ================= MOBILE ================= */
-
-@media (max-width: 1100px) {
-
-  .sidebar {
-    width: 220px;
   }
 
-  .stats-grid {
-    grid-template-columns: repeat(3,1fr);
+  if (input.value === "") return;
+
+  const value = Number(input.value);
+
+  if (!Number.isFinite(value)) return;
+
+  if (result === "Win") {
+
+    input.value = Math.abs(value);
+
   }
 
-  .analytics-stats {
-    grid-template-columns: repeat(3,1fr);
-  }
+  if (result === "Loss") {
 
-  .dashboard-grid,
-  .analytics-grid,
-  .risk-layout {
-    grid-template-columns: 1fr;
-  }
+    input.value = -Math.abs(value);
 
-  .filter-panel {
-    grid-template-columns: repeat(2,1fr);
   }
 
 }
 
 
-@media (max-width: 800px) {
+function getNormalizedPL() {
 
-  .sidebar {
-    display: none;
+  const result = $("result").value;
+  const raw = $("profitLoss").value;
+
+  if (result === "Break Even") return 0;
+
+  if (raw === "") return null;
+
+  const value = Number(raw);
+
+  if (!Number.isFinite(value)) return null;
+
+  if (result === "Win") {
+
+    return Number(
+      Math.abs(value).toFixed(2)
+    );
+
   }
 
-  .main {
-    padding: 15px;
+  if (result === "Loss") {
+
+    return Number(
+      -Math.abs(value).toFixed(2)
+    );
+
   }
 
-  .mobile-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 15px;
+  return Number(value.toFixed(2));
+
+}
+
+
+$("result").addEventListener(
+  "change",
+  normalizeProfitLossByResult
+);
+
+$("profitLoss").addEventListener(
+  "blur",
+  normalizeProfitLossByResult
+);
+
+
+/* =========================================================
+   SAVE / UPDATE TRADE
+   ========================================================= */
+
+$("tradeForm").addEventListener(
+  "submit",
+  saveTrade
+);
+
+
+async function saveTrade(event) {
+
+  event.preventDefault();
+
+  if (!state.user) return;
+
+  $("tradeError").textContent = "";
+
+  const rr = calculateTradeRR();
+
+  if ($("entry").value &&
+      $("sl").value &&
+      $("tp").value &&
+      $("rr").value === "Invalid") {
+
+    $("tradeError").textContent =
+      "Invalid Entry, SL or TP for this direction.";
+
+    return;
+
   }
 
-  .mobile-menu-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 11px;
-    border: 1px solid var(--border);
-    background: var(--panel2);
-    color: var(--text);
-    font-size: 20px;
+
+  const riskRaw =
+    $("riskAmount").value.trim();
+
+  const riskAmount =
+    riskRaw === "" ? 0 : Number(riskRaw);
+
+  if (!Number.isFinite(riskAmount) || riskAmount < 0) {
+
+    $("tradeError").textContent =
+      "Risk Amount must be a valid positive number.";
+
+    return;
+
   }
 
-  .mobile-nav {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 10px;
-    margin-bottom: 15px;
+
+  const profitLoss =
+    getNormalizedPL();
+
+  if (profitLoss === null) {
+
+    $("tradeError").textContent =
+      "Please enter a valid P/L.";
+
+    return;
+
   }
 
-  .mobile-nav.open {
-    display: flex;
-  }
 
-  .mobile-nav .nav-btn {
-    width: 100%;
-  }
+  const pair =
+    $("pair").value.trim().toUpperCase() ||
+    "XAUUSD";
 
-  .page-header {
-    align-items: center;
-  }
 
-  .page-header h1 {
-    font-size: 25px;
-  }
+  const tradeData = {
 
-  .stats-grid {
-    grid-template-columns: repeat(2,1fr);
-  }
+    tradeId:
+      $("tradeId").value ||
+      generateTradeId(),
 
-  .analytics-stats {
-    grid-template-columns: repeat(2,1fr);
-  }
+    date:
+      $("tradeDate").value ||
+      todayString(),
 
-  .streak-grid {
-    grid-template-columns: repeat(2,1fr);
-  }
+    pair,
 
-  .filter-panel {
-    grid-template-columns: 1fr;
-  }
+    tradingType:
+      $("tradingType").value,
 
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
+    direction:
+      $("direction").value,
 
-  .field.full {
-    grid-column: auto;
-  }
+    strategy:
+      $("strategy").value,
 
-  .calendar-day {
-    min-height: 75px;
-  }
+    session:
+      $("session").value,
 
-  .calendar-weekdays span {
-    font-size: 8px;
+    bias:
+      $("bias").value,
+
+    entry:
+      num($("entry").value),
+
+    sl:
+      num($("sl").value),
+
+    tp:
+      num($("tp").value),
+
+    rr:
+      rr > 0 ? rr : 0,
+
+    riskAmount,
+
+    lotSize:
+      num($("lotSize").value),
+
+    result:
+      $("result").value,
+
+    profitLoss,
+
+    confidence:
+      $("confidence").value,
+
+    emotion:
+      $("emotion").value,
+
+    mistake:
+      $("mistake").value,
+
+    notes:
+      $("notes").value.trim(),
+
+    userId:
+      state.user.uid,
+
+    updatedAt:
+      serverTimestamp()
+
+  };
+
+
+  const button = $("saveTradeBtn");
+
+  button.disabled = true;
+  button.textContent = "Saving...";
+
+
+  try {
+
+    if (state.editingTrade) {
+
+      const trade = state.editingTrade;
+
+      const reference =
+        getTradeReference(trade);
+
+      if (!reference) {
+
+        throw new Error(
+          "Could not find the original trade location."
+        );
+
+      }
+
+      await updateDoc(
+        reference,
+        tradeData
+      );
+
+    } else {
+
+      await addDoc(
+        collection(
+          db,
+          "users",
+          state.user.uid,
+          "trades"
+        ),
+        {
+          ...tradeData,
+          createdAt: serverTimestamp()
+        }
+      );
+
+    }
+
+
+    closeTradeModal();
+
+    await loadUserData();
+
+  } catch (error) {
+
+    console.error(
+      "Save Trade Error:",
+      error
+    );
+
+    $("tradeError").textContent =
+      error.message ||
+      "Could not save trade.";
+
+  } finally {
+
+    button.disabled = false;
+
+    button.textContent =
+      state.editingTrade
+        ? "Update Trade"
+        : "Save Trade";
+
   }
 
 }
 
 
-@media (max-width: 680px) {
+/* =========================================================
+   FIRESTORE COMPATIBILITY
+   ========================================================= */
 
-  .main {
-    padding: 12px;
+function getTradeReference(trade) {
+
+  if (!state.user || !trade?._docId) {
+    return null;
   }
 
-  .page-header {
-    gap: 10px;
-    margin-bottom: 18px;
+
+  if (trade._source === "nested") {
+
+    return doc(
+      db,
+      "users",
+      state.user.uid,
+      "trades",
+      trade._docId
+    );
+
   }
 
-  .page-header p {
-    font-size: 11px;
+
+  if (
+    trade._source === "top-userId" ||
+    trade._source === "top-uid"
+  ) {
+
+    return doc(
+      db,
+      "trades",
+      trade._docId
+    );
+
   }
 
-  .page-header .add-trade-btn {
-    min-height: 40px;
-    padding: 9px 12px;
-    border-radius: 11px;
+
+  return null;
+
+}
+
+
+function firstValue(data, keys, fallback = "") {
+
+  for (const key of keys) {
+
+    if (
+      data[key] !== undefined &&
+      data[key] !== null &&
+      data[key] !== ""
+    ) {
+
+      return data[key];
+
+    }
+
   }
 
-  .page-header .add-trade-btn .label {
-    display: none;
+  return fallback;
+
+}
+
+
+function normalizeTrade(data, source, docId) {
+
+  const rawRR =
+    firstValue(
+      data,
+      ["rr", "riskReward"],
+      0
+    );
+
+  let rr = num(rawRR);
+
+  if (
+    typeof rawRR === "string" &&
+    rawRR.includes(":")
+  ) {
+
+    rr = num(
+      rawRR.split(":").pop()
+    );
+
   }
 
-  .stats-grid {
-    gap: 8px;
+
+  return {
+
+    _source: source,
+    _docId: docId,
+
+    tradeId:
+      firstValue(
+        data,
+        ["tradeId", "id", "tradeID"],
+        docId
+      ),
+
+    date:
+      firstValue(
+        data,
+        ["date", "tradeDate"],
+        todayString()
+      ),
+
+    pair:
+      String(
+        firstValue(
+          data,
+          ["pair", "symbol", "instrument"],
+          "XAUUSD"
+        )
+      ).toUpperCase(),
+
+    tradingType:
+      firstValue(
+        data,
+        ["tradingType", "tradeType", "type"],
+        "Scalping"
+      ),
+
+    direction:
+      firstValue(
+        data,
+        ["direction", "side"],
+        "Buy"
+      ),
+
+    strategy:
+      firstValue(
+        data,
+        ["strategy", "setup"],
+        "Other"
+      ),
+
+    session:
+      firstValue(
+        data,
+        ["session"],
+        "London"
+      ),
+
+    bias:
+      firstValue(
+        data,
+        ["bias", "marketBias"],
+        "Neutral"
+      ),
+
+    entry:
+      num(
+        firstValue(
+          data,
+          ["entry", "entryPrice"],
+          0
+        )
+      ),
+
+    sl:
+      num(
+        firstValue(
+          data,
+          ["sl", "stopLoss"],
+          0
+        )
+      ),
+
+    tp:
+      num(
+        firstValue(
+          data,
+          ["tp", "takeProfit"],
+          0
+        )
+      ),
+
+    rr,
+
+    riskAmount:
+      num(
+        firstValue(
+          data,
+          ["riskAmount", "risk"],
+          0
+        )
+      ),
+
+    lotSize:
+      num(
+        firstValue(
+          data,
+          ["lotSize", "lot"],
+          0
+        )
+      ),
+
+    result:
+      firstValue(
+        data,
+        ["result"],
+        "Break Even"
+      ),
+
+    profitLoss:
+      num(
+        firstValue(
+          data,
+          ["profitLoss", "pnl", "pl"],
+          0
+        )
+      ),
+
+    confidence:
+      firstValue(
+        data,
+        ["confidence"],
+        "3"
+      ),
+
+    emotion:
+      firstValue(
+        data,
+        ["emotion"],
+        "Neutral"
+      ),
+
+    mistake:
+      firstValue(
+        data,
+        ["mistake", "mistakes"],
+        "None"
+      ),
+
+    notes:
+      firstValue(
+        data,
+        ["notes", "note"],
+        ""
+      )
+
+  };
+
+}
+
+
+async function loadUserData() {
+
+  if (!state.user) return;
+
+  const uid = state.user.uid;
+
+  const results = [];
+
+  /* ---------- NEW STRUCTURE ---------- */
+
+  try {
+
+    const nestedSnapshot =
+      await getDocs(
+        collection(
+          db,
+          "users",
+          uid,
+          "trades"
+        )
+      );
+
+    nestedSnapshot.forEach(item => {
+
+      results.push(
+        normalizeTrade(
+          item.data(),
+          "nested",
+          item.id
+        )
+      );
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Nested trades load error:",
+      error
+    );
+
   }
 
-  .stat-card {
-    padding: 13px;
+
+  /* ---------- OLD TOP LEVEL: userId ---------- */
+
+  try {
+
+    const q =
+      query(
+        collection(db, "trades"),
+        where("userId", "==", uid)
+      );
+
+    const snapshot =
+      await getDocs(q);
+
+    snapshot.forEach(item => {
+
+      results.push(
+        normalizeTrade(
+          item.data(),
+          "top-userId",
+          item.id
+        )
+      );
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Top-level userId trades load error:",
+      error
+    );
+
   }
 
-  .stat-card strong {
-    font-size: 17px;
+
+  /* ---------- OLD TOP LEVEL: uid ---------- */
+
+  try {
+
+    const q =
+      query(
+        collection(db, "trades"),
+        where("uid", "==", uid)
+      );
+
+    const snapshot =
+      await getDocs(q);
+
+    snapshot.forEach(item => {
+
+      results.push(
+        normalizeTrade(
+          item.data(),
+          "top-uid",
+          item.id
+        )
+      );
+
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Top-level uid trades load error:",
+      error
+    );
+
   }
 
-  .analytics-stats {
-    gap: 8px;
+
+  /* ---------- DEDUPLICATE ---------- */
+
+  const unique = new Map();
+
+  for (const trade of results) {
+
+    const key =
+      trade.tradeId ||
+      `${trade._source}-${trade._docId}`;
+
+    if (!unique.has(key)) {
+
+      unique.set(key, trade);
+
+    } else {
+
+      const existing =
+        unique.get(key);
+
+      /*
+        Prefer nested copy when the
+        same trade exists in both places.
+      */
+
+      if (
+        existing._source !== "nested" &&
+        trade._source === "nested"
+      ) {
+
+        unique.set(key, trade);
+
+      }
+
+    }
+
   }
 
-  .analytics-card {
-    padding: 13px;
-  }
 
-  .analytics-card strong {
-    font-size: 16px;
-  }
+  state.trades =
+    Array.from(unique.values())
+      .sort(
+        (a,b) =>
+          String(b.date).localeCompare(
+            String(a.date)
+          )
+      );
 
-  .streak-card {
-    padding: 13px;
-  }
 
-  .panel {
-    padding: 14px;
-    border-radius: 15px;
-  }
+  console.log(
+    "Loaded trades:",
+    state.trades.length
+  );
 
-  .analytics-controls {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
 
-  .analytics-controls .field {
-    min-width: 0;
-  }
+  await loadSettings();
 
-  .quick-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
+  updatePairFilter();
 
-  .risk-results {
-    grid-template-columns: 1fr 1fr;
-  }
+  renderDashboard();
+  renderJournal();
+  renderAnalytics();
+  renderCalendar();
 
-  .calendar-header h2 {
-    min-width: 150px;
-    font-size: 16px;
-  }
+}
 
-  .calendar-grid {
-    gap: 3px;
-  }
 
-  .calendar-day {
-    min-height: 65px;
-    padding: 6px;
-    border-radius: 8px;
-  }
+/* =========================================================
+   EDIT TRADE
+   ========================================================= */
 
-  .calendar-pl {
-    margin-top: 10px;
-    font-size: 9px;
-  }
+function editTrade(tradeId) {
 
-  .calendar-trades {
-    font-size: 8px;
-  }
+  const trade =
+    state.trades.find(
+      item =>
+        item.tradeId === tradeId
+    );
 
-  .modal {
-    padding: 8px;
-  }
+  if (!trade) return;
 
-  .modal-card {
-    max-height: 96vh;
-    padding: 15px;
-    border-radius: 17px;
-  }
+  state.editingTrade = trade;
 
-  .modal-actions {
-    position: sticky;
-    bottom: -15px;
-    background: #101319;
-    padding: 12px 0 0;
+  $("tradeModalTitle").textContent =
+    "Edit Trade";
+
+  $("saveTradeBtn").textContent =
+    "Update Trade";
+
+
+  $("editingTradeId").value =
+    trade.tradeId;
+
+  $("tradeId").value =
+    trade.tradeId;
+
+  $("tradeDate").value =
+    trade.date;
+
+  $("pair").value =
+    trade.pair || "XAUUSD";
+
+  $("tradingType").value =
+    trade.tradingType;
+
+  $("direction").value =
+    trade.direction;
+
+  $("strategy").value =
+    trade.strategy;
+
+  $("session").value =
+    trade.session;
+
+  $("bias").value =
+    trade.bias;
+
+  $("entry").value =
+    trade.entry || "";
+
+  $("sl").value =
+    trade.sl || "";
+
+  $("tp").value =
+    trade.tp || "";
+
+  calculateTradeRR();
+
+  $("riskAmount").value =
+    trade.riskAmount || "";
+
+  $("lotSize").value =
+    trade.lotSize || "";
+
+  $("result").value =
+    trade.result;
+
+  $("profitLoss").value =
+    trade.profitLoss;
+
+  $("confidence").value =
+    trade.confidence || "3";
+
+  $("emotion").value =
+    trade.emotion || "Neutral";
+
+  $("mistake").value =
+    trade.mistake || "None";
+
+  $("notes").value =
+    trade.notes || "";
+
+  $("tradeError").textContent = "";
+
+  $("tradeModal").classList.remove("hidden");
+
+}
+
+
+window.editTrade = editTrade;
+
+
+/* =========================================================
+   DELETE TRADE
+   ========================================================= */
+
+async function deleteTrade(tradeId) {
+
+  const trade =
+    state.trades.find(
+      item =>
+        item.tradeId === tradeId
+    );
+
+  if (!trade) return;
+
+  const confirmed =
+    confirm(
+      `Delete trade ${trade.tradeId}?`
+    );
+
+  if (!confirmed) return;
+
+
+  try {
+
+    const reference =
+      getTradeReference(trade);
+
+    if (!reference) {
+
+      throw new Error(
+        "Original trade location not found."
+      );
+
+    }
+
+    await deleteDoc(reference);
+
+    await loadUserData();
+
+  } catch (error) {
+
+    console.error(
+      "Delete trade error:",
+      error
+    );
+
+    alert(
+      error.message ||
+      "Could not delete trade."
+    );
+
   }
 
 }
 
 
-@media (max-width: 430px) {
+window.deleteTrade = deleteTrade;
 
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
+
+/* =========================================================
+   JOURNAL
+   ========================================================= */
+
+function updatePairFilter() {
+
+  const select =
+    $("journalPairFilter");
+
+  const current =
+    select.value;
+
+  const pairs =
+    [...new Set(
+      state.trades
+        .map(t => t.pair)
+        .filter(Boolean)
+    )]
+    .sort();
+
+  select.innerHTML =
+    `<option value="">All Pairs</option>` +
+    pairs
+      .map(
+        pair =>
+          `<option value="${escapeHTML(pair)}">${escapeHTML(pair)}</option>`
+      )
+      .join("");
+
+  select.value = current;
+
+}
+
+
+[
+  "journalSearch",
+  "journalResultFilter",
+  "journalTypeFilter",
+  "journalPairFilter"
+].forEach(id => {
+
+  $(id).addEventListener(
+    "input",
+    renderJournal
+  );
+
+  $(id).addEventListener(
+    "change",
+    renderJournal
+  );
+
+});
+
+
+$("clearJournalFilters").addEventListener(
+  "click",
+  () => {
+
+    $("journalSearch").value = "";
+    $("journalResultFilter").value = "";
+    $("journalTypeFilter").value = "";
+    $("journalPairFilter").value = "";
+
+    renderJournal();
+
+  }
+);
+
+
+function getFilteredJournalTrades() {
+
+  const search =
+    $("journalSearch").value
+      .trim()
+      .toLowerCase();
+
+  const result =
+    $("journalResultFilter").value;
+
+  const type =
+    $("journalTypeFilter").value;
+
+  const pair =
+    $("journalPairFilter").value;
+
+
+  return state.trades.filter(trade => {
+
+    const matchesSearch =
+      !search ||
+      [
+        trade.pair,
+        trade.strategy,
+        trade.direction,
+        trade.session,
+        trade.emotion,
+        trade.mistake,
+        trade.notes
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(search);
+
+    const matchesResult =
+      !result ||
+      trade.result === result;
+
+    const matchesType =
+      !type ||
+      trade.tradingType === type;
+
+    const matchesPair =
+      !pair ||
+      trade.pair === pair;
+
+    return (
+      matchesSearch &&
+      matchesResult &&
+      matchesType &&
+      matchesPair
+    );
+
+  });
+
+}
+
+
+function renderJournal() {
+
+  const trades =
+    getFilteredJournalTrades();
+
+  $("journalTradeCount").textContent =
+    `${trades.length} trade${trades.length === 1 ? "" : "s"}`;
+
+
+  if (!trades.length) {
+
+    $("journalTableBody").innerHTML = `
+      <tr>
+        <td colspan="10" style="text-align:center;color:var(--muted);padding:30px">
+          No trades found.
+        </td>
+      </tr>
+    `;
+
+    return;
+
   }
 
-  .analytics-stats {
-    grid-template-columns: 1fr 1fr;
+
+  $("journalTableBody").innerHTML =
+    trades.map(trade => {
+
+      const resultClass =
+        trade.result === "Win"
+          ? "result-win"
+          : trade.result === "Loss"
+            ? "result-loss"
+            : "result-be";
+
+      const plClass =
+        trade.profitLoss >= 0
+          ? "pl-positive"
+          : "pl-negative";
+
+
+      return `
+        <tr>
+
+          <td>${escapeHTML(formatDate(trade.date))}</td>
+
+          <td>${escapeHTML(trade.pair)}</td>
+
+          <td>${escapeHTML(trade.tradingType)}</td>
+
+          <td>${escapeHTML(trade.direction)}</td>
+
+          <td>${escapeHTML(trade.strategy)}</td>
+
+          <td>${trade.entry || "-"}</td>
+
+          <td>
+            ${trade.rr > 0
+              ? `1:${trade.rr.toFixed(2)}`
+              : "-"}
+          </td>
+
+          <td class="${resultClass}">
+            ${escapeHTML(trade.result)}
+          </td>
+
+          <td class="${plClass}">
+            ${money(trade.profitLoss)}
+          </td>
+
+          <td>
+
+            <button
+              class="action-btn"
+              onclick="editTrade('${escapeHTML(trade.tradeId)}')"
+            >
+              Edit
+            </button>
+
+            <button
+              class="action-btn delete"
+              onclick="deleteTrade('${escapeHTML(trade.tradeId)}')"
+            >
+              Delete
+            </button>
+
+          </td>
+
+        </tr>
+      `;
+
+    }).join("");
+
+}
+
+
+/* =========================================================
+   ANALYTICS
+   ========================================================= */
+
+$("analyticsPeriod").addEventListener(
+  "change",
+  renderAnalytics
+);
+
+$("analyticsBreakdown").addEventListener(
+  "change",
+  renderAnalytics
+);
+
+
+function getAnalyticsTrades() {
+
+  const period =
+    $("analyticsPeriod").value;
+
+  const now =
+    new Date();
+
+  let start = null;
+
+  if (period === "7") {
+
+    start = new Date(now);
+
+    start.setDate(
+      now.getDate() - 6
+    );
+
   }
 
-  .streak-grid {
-    grid-template-columns: 1fr 1fr;
+  if (period === "30") {
+
+    start = new Date(now);
+
+    start.setDate(
+      now.getDate() - 29
+    );
+
   }
 
-  .risk-results {
-    grid-template-columns: 1fr;
+  if (period === "month") {
+
+    start = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      1
+    );
+
   }
 
-  .calendar-weekdays {
-    gap: 2px;
+  if (period === "year") {
+
+    start = new Date(
+      now.getFullYear(),
+      0,
+      1
+    );
+
   }
 
-  .calendar-weekdays span {
-    font-size: 7px;
+  if (!start) {
+
+    return [...state.trades];
+
+  }
+
+
+  start.setHours(0,0,0,0);
+
+  return state.trades.filter(trade => {
+
+    const date =
+      new Date(`${trade.date}T12:00:00`);
+
+    return date >= start;
+
+  });
+
+}
+
+
+function calculateAnalytics(trades) {
+
+  let wins = 0;
+  let losses = 0;
+  let breakEven = 0;
+
+  let totalPL = 0;
+  let grossProfit = 0;
+  let grossLoss = 0;
+
+  let rrSum = 0;
+  let rrCount = 0;
+
+  let riskSum = 0;
+  let riskCount = 0;
+
+  let bestTrade = 0;
+  let worstTrade = 0;
+
+  let equity = 0;
+  let peak = 0;
+  let maxDrawdown = 0;
+
+
+  const sorted =
+    [...trades].sort(
+      (a,b) =>
+        String(a.date).localeCompare(
+          String(b.date)
+        )
+    );
+
+
+  for (const trade of sorted) {
+
+    const pl =
+      num(trade.profitLoss);
+
+    totalPL += pl;
+
+    equity += pl;
+
+    peak =
+      Math.max(
+        peak,
+        equity
+      );
+
+    const drawdown =
+      peak - equity;
+
+    maxDrawdown =
+      Math.max(
+        maxDrawdown,
+        drawdown
+      );
+
+
+    if (trade.result === "Win") {
+
+      wins++;
+
+      grossProfit +=
+        Math.max(pl,0);
+
+    }
+
+    else if (trade.result === "Loss") {
+
+      losses++;
+
+      grossLoss +=
+        Math.abs(
+          Math.min(pl,0)
+        );
+
+    }
+
+    else {
+
+      breakEven++;
+
+    }
+
+
+    if (trade.rr > 0) {
+
+      rrSum +=
+        num(trade.rr);
+
+      rrCount++;
+
+    }
+
+
+    if (trade.riskAmount > 0) {
+
+      riskSum +=
+        num(trade.riskAmount);
+
+      riskCount++;
+
+    }
+
+
+    bestTrade =
+      Math.max(
+        bestTrade,
+        pl
+      );
+
+    worstTrade =
+      Math.min(
+        worstTrade,
+        pl
+      );
+
+  }
+
+
+  const totalTrades =
+    trades.length;
+
+  const winRate =
+    totalTrades > 0
+      ? (wins / totalTrades) * 100
+      : 0;
+
+
+  const profitFactor =
+    grossLoss > 0
+      ? grossProfit / grossLoss
+      : grossProfit > 0
+        ? Infinity
+        : 0;
+
+
+  const averagePL =
+    totalTrades
+      ? totalPL / totalTrades
+      : 0;
+
+
+  const averageWin =
+    wins
+      ? grossProfit / wins
+      : 0;
+
+
+  const averageLoss =
+    losses
+      ? -grossLoss / losses
+      : 0;
+
+
+  const avgRR =
+    rrCount
+      ? rrSum / rrCount
+      : 0;
+
+
+  const avgRisk =
+    riskCount
+      ? riskSum / riskCount
+      : 0;
+
+
+  const recoveryFactor =
+    maxDrawdown > 0
+      ? totalPL / maxDrawdown
+      : 0;
+
+
+  return {
+
+    totalTrades,
+    wins,
+    losses,
+    breakEven,
+    winRate,
+    totalPL,
+    grossProfit,
+    grossLoss,
+    profitFactor,
+    averagePL,
+    averageWin,
+    averageLoss,
+    avgRR,
+    avgRisk,
+    bestTrade,
+    worstTrade,
+    maxDrawdown,
+    recoveryFactor,
+    expectancy: averagePL
+
+  };
+
+}
+
+
+function calculateStreaks(trades) {
+
+  const sorted =
+    [...trades].sort(
+      (a,b) =>
+        String(a.date).localeCompare(
+          String(b.date)
+        )
+    );
+
+
+  let currentWin = 0;
+  let currentLoss = 0;
+
+  let bestWin = 0;
+  let bestLoss = 0;
+
+  let win = 0;
+  let loss = 0;
+
+
+  for (const trade of sorted) {
+
+    if (trade.result === "Win") {
+
+      win++;
+      loss = 0;
+
+      bestWin =
+        Math.max(
+          bestWin,
+          win
+        );
+
+    }
+
+    else if (trade.result === "Loss") {
+
+      loss++;
+      win = 0;
+
+      bestLoss =
+        Math.max(
+          bestLoss,
+          loss
+        );
+
+    }
+
+  }
+
+
+  for (
+    let i = sorted.length - 1;
+    i >= 0;
+    i--
+  ) {
+
+    if (
+      sorted[i].result === "Win"
+    ) {
+
+      currentWin++;
+
+    } else {
+
+      break;
+
+    }
+
+  }
+
+
+  for (
+    let i = sorted.length - 1;
+    i >= 0;
+    i--
+  ) {
+
+    if (
+      sorted[i].result === "Loss"
+    ) {
+
+      currentLoss++;
+
+    } else {
+
+      break;
+
+    }
+
+  }
+
+
+  return {
+    currentWin,
+    currentLoss,
+    bestWin,
+    bestLoss
+  };
+
+}
+
+
+function renderAnalytics() {
+
+  const trades =
+    getAnalyticsTrades();
+
+  const stats =
+    calculateAnalytics(trades);
+
+  const streaks =
+    calculateStreaks(trades);
+
+
+  $("aTotalTrades").textContent =
+    stats.totalTrades;
+
+  $("aWins").textContent =
+    stats.wins;
+
+  $("aLosses").textContent =
+    stats.losses;
+
+  $("aBreakEven").textContent =
+    stats.breakEven;
+
+  $("aWinRate").textContent =
+    `${stats.winRate.toFixed(1)}%`;
+
+  $("aTotalPL").textContent =
+    money(stats.totalPL);
+
+  $("aProfitFactor").textContent =
+    Number.isFinite(stats.profitFactor)
+      ? stats.profitFactor.toFixed(2)
+      : "∞";
+
+  $("aExpectancy").textContent =
+    money(stats.expectancy);
+
+  $("aAvgRR").textContent =
+    stats.avgRR
+      ? `1:${stats.avgRR.toFixed(2)}`
+      : "0.00";
+
+  $("aAvgRisk").textContent =
+    money(stats.avgRisk);
+
+  $("aAvgWin").textContent =
+    money(stats.averageWin);
+
+  $("aAvgLoss").textContent =
+    money(stats.averageLoss);
+
+  $("aBestTrade").textContent =
+    money(stats.bestTrade);
+
+  $("aWorstTrade").textContent =
+    money(stats.worstTrade);
+
+  $("aMaxDrawdown").textContent =
+    money(stats.maxDrawdown);
+
+  $("aRecoveryFactor").textContent =
+    stats.recoveryFactor.toFixed(2);
+
+
+  $("currentWinStreak").textContent =
+    streaks.currentWin;
+
+  $("currentLossStreak").textContent =
+    streaks.currentLoss;
+
+  $("bestWinStreak").textContent =
+    streaks.bestWin;
+
+  $("bestLossStreak").textContent =
+    streaks.bestLoss;
+
+
+  renderAnalyticsBreakdown(trades);
+
+  renderDailyPerformance(trades);
+
+  renderMonthlyPerformance(trades);
+
+  drawEquityChart(
+    $("analyticsEquityChart"),
+    trades
+  );
+
+  drawResultChart(
+    $("resultChart"),
+    trades
+  );
+
+}
+
+
+/* =========================================================
+   BREAKDOWN
+   ========================================================= */
+
+function getBreakdownLabel(trade, key) {
+
+  const map = {
+
+    pair: trade.pair,
+
+    tradingType:
+      trade.tradingType,
+
+    strategy:
+      trade.strategy,
+
+    session:
+      trade.session,
+
+    direction:
+      trade.direction,
+
+    bias:
+      trade.bias,
+
+    emotion:
+      trade.emotion,
+
+    mistake:
+      trade.mistake,
+
+    result:
+      trade.result
+
+  };
+
+  return map[key] || "Unknown";
+
+}
+
+
+function renderAnalyticsBreakdown(trades) {
+
+  const key =
+    $("analyticsBreakdown").value;
+
+  const titles = {
+
+    pair: "Performance by Pair",
+    tradingType: "Performance by Trading Type",
+    strategy: "Performance by Strategy",
+    session: "Performance by Session",
+    direction: "Performance by Direction",
+    bias: "Performance by Market Bias",
+    emotion: "Performance by Emotion",
+    mistake: "Performance by Mistake",
+    result: "Performance by Result"
+
+  };
+
+
+  $("breakdownTitle").textContent =
+    titles[key] ||
+    "Performance Breakdown";
+
+
+  const groups =
+    new Map();
+
+
+  trades.forEach(trade => {
+
+    const label =
+      getBreakdownLabel(
+        trade,
+        key
+      );
+
+    if (!groups.has(label)) {
+
+      groups.set(label, []);
+
+    }
+
+    groups.get(label).push(trade);
+
+  });
+
+
+  if (!groups.size) {
+
+    $("analyticsBreakdownBody").innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align:center;color:var(--muted);padding:30px">
+          No data available.
+        </td>
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  $("analyticsBreakdownBody").innerHTML =
+    [...groups.entries()]
+      .sort((a,b) => {
+
+        const apl =
+          a[1].reduce(
+            (sum,t) =>
+              sum + num(t.profitLoss),
+            0
+          );
+
+        const bpl =
+          b[1].reduce(
+            (sum,t) =>
+              sum + num(t.profitLoss),
+            0
+          );
+
+        return bpl - apl;
+
+      })
+      .map(([label, items]) => {
+
+        const s =
+          calculateAnalytics(items);
+
+
+        return `
+          <tr>
+
+            <td>
+              <strong>
+                ${escapeHTML(label)}
+              </strong>
+            </td>
+
+            <td>${s.totalTrades}</td>
+
+            <td class="result-win">
+              ${s.wins}
+            </td>
+
+            <td class="result-loss">
+              ${s.losses}
+            </td>
+
+            <td>
+              ${s.winRate.toFixed(1)}%
+            </td>
+
+            <td class="${
+              s.totalPL >= 0
+                ? "pl-positive"
+                : "pl-negative"
+            }">
+              ${money(s.totalPL)}
+            </td>
+
+            <td>
+              ${money(s.averagePL)}
+            </td>
+
+            <td>
+              ${s.avgRR
+                ? `1:${s.avgRR.toFixed(2)}`
+                : "-"}
+            </td>
+
+          </tr>
+        `;
+
+      })
+      .join("");
+
+}
+
+
+/* =========================================================
+   DAILY / MONTHLY
+   ========================================================= */
+
+function groupByDate(trades) {
+
+  const map = new Map();
+
+  trades.forEach(trade => {
+
+    if (!map.has(trade.date)) {
+
+      map.set(
+        trade.date,
+        {
+          trades: 0,
+          pl: 0
+        }
+      );
+
+    }
+
+    const item =
+      map.get(trade.date);
+
+    item.trades++;
+
+    item.pl +=
+      num(trade.profitLoss);
+
+  });
+
+  return map;
+
+}
+
+
+function renderDailyPerformance(trades) {
+
+  const groups =
+    groupByDate(trades);
+
+  const entries =
+    [...groups.entries()]
+      .sort(
+        (a,b) =>
+          b[0].localeCompare(a[0])
+      )
+      .slice(0,30);
+
+
+  $("dailyPerformanceBody").innerHTML =
+    entries.length
+      ? entries.map(([date,data]) => `
+          <tr>
+            <td>${escapeHTML(formatDate(date))}</td>
+            <td>${data.trades}</td>
+            <td class="${
+              data.pl >= 0
+                ? "pl-positive"
+                : "pl-negative"
+            }">
+              ${money(data.pl)}
+            </td>
+          </tr>
+        `).join("")
+      : `
+          <tr>
+            <td colspan="3"
+              style="text-align:center;color:var(--muted);padding:25px">
+              No data.
+            </td>
+          </tr>
+        `;
+
+}
+
+
+function renderMonthlyPerformance(trades) {
+
+  const map = new Map();
+
+  trades.forEach(trade => {
+
+    const key =
+      String(trade.date).slice(0,7);
+
+    if (!map.has(key)) {
+
+      map.set(
+        key,
+        {
+          trades: 0,
+          pl: 0
+        }
+      );
+
+    }
+
+    const item =
+      map.get(key);
+
+    item.trades++;
+
+    item.pl +=
+      num(trade.profitLoss);
+
+  });
+
+
+  const entries =
+    [...map.entries()]
+      .sort(
+        (a,b) =>
+          b[0].localeCompare(a[0])
+      )
+      .slice(0,24);
+
+
+  $("monthlyPerformanceBody").innerHTML =
+    entries.length
+      ? entries.map(([month,data]) => {
+
+          const [year,m] =
+            month.split("-");
+
+          const label =
+            new Date(
+              Number(year),
+              Number(m)-1,
+              1
+            ).toLocaleDateString(
+              "en-US",
+              {
+                month:"short",
+                year:"numeric"
+              }
+            );
+
+
+          return `
+            <tr>
+
+              <td>${label}</td>
+
+              <td>${data.trades}</td>
+
+              <td class="${
+                data.pl >= 0
+                  ? "pl-positive"
+                  : "pl-negative"
+              }">
+                ${money(data.pl)}
+              </td>
+
+            </tr>
+          `;
+
+        }).join("")
+      : `
+          <tr>
+            <td colspan="3"
+              style="text-align:center;color:var(--muted);padding:25px">
+              No data.
+            </td>
+          </tr>
+        `;
+
+}
+
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+function renderDashboard() {
+
+  const stats =
+    calculateAnalytics(
+      state.trades
+    );
+
+
+  $("dashTotalTrades").textContent =
+    stats.totalTrades;
+
+  $("dashWinRate").textContent =
+    `${stats.winRate.toFixed(1)}%`;
+
+  $("dashTotalPL").textContent =
+    money(stats.totalPL);
+
+  $("dashProfitFactor").textContent =
+    Number.isFinite(stats.profitFactor)
+      ? stats.profitFactor.toFixed(2)
+      : "∞";
+
+  $("dashAvgRR").textContent =
+    stats.avgRR
+      ? `1:${stats.avgRR.toFixed(2)}`
+      : "0.00";
+
+  $("dashDrawdown").textContent =
+    money(stats.maxDrawdown);
+
+
+  renderRecentTrades();
+
+  drawEquityChart(
+    $("equityChart"),
+    state.trades
+  );
+
+}
+
+
+function renderRecentTrades() {
+
+  const trades =
+    state.trades.slice(0,8);
+
+
+  if (!trades.length) {
+
+    $("recentTrades").innerHTML = `
+      <div style="color:var(--muted);padding:25px;text-align:center">
+        No trades yet.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  $("recentTrades").innerHTML =
+    trades.map(trade => {
+
+      const pl =
+        num(trade.profitLoss);
+
+
+      return `
+        <div class="recent-trade">
+
+          <div class="recent-trade-left">
+
+            <strong>
+              ${escapeHTML(trade.pair)}
+              ·
+              ${escapeHTML(trade.direction)}
+            </strong>
+
+            <span>
+              ${escapeHTML(formatDate(trade.date))}
+              ·
+              ${escapeHTML(trade.strategy)}
+            </span>
+
+          </div>
+
+          <strong class="${
+            pl >= 0
+              ? "pl-positive"
+              : "pl-negative"
+          }">
+
+            ${money(pl)}
+
+          </strong>
+
+        </div>
+      `;
+
+    }).join("");
+
+}
+
+
+/* =========================================================
+   SIMPLE CANVAS CHARTS
+   ========================================================= */
+
+function setupCanvas(canvas) {
+
+  if (!canvas) return null;
+
+  const rect =
+    canvas.getBoundingClientRect();
+
+  const ratio =
+    window.devicePixelRatio || 1;
+
+  canvas.width =
+    Math.max(
+      rect.width * ratio,
+      300
+    );
+
+  canvas.height =
+    Math.max(
+      300 * ratio,
+      300
+    );
+
+  const ctx =
+    canvas.getContext("2d");
+
+  ctx.setTransform(
+    ratio,
+    0,
+    0,
+    ratio,
+    0,
+    0
+  );
+
+  return {
+    ctx,
+    width: rect.width,
+    height: 300
+  };
+
+}
+
+
+function drawEquityChart(canvas, trades) {
+
+  const setup =
+    setupCanvas(canvas);
+
+  if (!setup) return;
+
+  const {
+    ctx,
+    width,
+    height
+  } = setup;
+
+
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+
+  const sorted =
+    [...trades].sort(
+      (a,b) =>
+        String(a.date).localeCompare(
+          String(b.date)
+        )
+    );
+
+
+  if (!sorted.length) {
+
+    ctx.fillStyle = "#8c929e";
+
+    ctx.font = "13px Arial";
+
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+      "No trading data yet",
+      width / 2,
+      height / 2
+    );
+
+    return;
+
+  }
+
+
+  let equity = 0;
+
+  const values =
+    [0];
+
+
+  sorted.forEach(trade => {
+
+    equity +=
+      num(trade.profitLoss);
+
+    values.push(equity);
+
+  });
+
+
+  const min =
+    Math.min(...values);
+
+  const max =
+    Math.max(...values);
+
+  const range =
+    max - min || 1;
+
+
+  const left = 20;
+  const right = width - 20;
+  const top = 20;
+  const bottom = height - 25;
+
+
+  ctx.strokeStyle =
+    "rgba(255,255,255,.08)";
+
+  ctx.lineWidth = 1;
+
+
+  for (let i=0;i<5;i++) {
+
+    const y =
+      top +
+      (i/4) *
+      (bottom-top);
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      left,
+      y
+    );
+
+    ctx.lineTo(
+      right,
+      y
+    );
+
+    ctx.stroke();
+
+  }
+
+
+  ctx.beginPath();
+
+
+  values.forEach((value,index) => {
+
+    const x =
+      left +
+      (index /
+        Math.max(values.length - 1,1)) *
+      (right-left);
+
+    const y =
+      bottom -
+      ((value-min)/range) *
+      (bottom-top);
+
+
+    if (index === 0) {
+
+      ctx.moveTo(x,y);
+
+    } else {
+
+      ctx.lineTo(x,y);
+
+    }
+
+  });
+
+
+  ctx.strokeStyle =
+    "#d6ae55";
+
+  ctx.lineWidth = 2.5;
+
+  ctx.stroke();
+
+
+  ctx.fillStyle =
+    "#8c929e";
+
+  ctx.font =
+    "10px Arial";
+
+  ctx.textAlign =
+    "left";
+
+  ctx.fillText(
+    money(max),
+    left,
+    12
+  );
+
+  ctx.fillText(
+    money(min),
+    left,
+    height - 5
+  );
+
+}
+
+
+function drawResultChart(canvas, trades) {
+
+  const setup =
+    setupCanvas(canvas);
+
+  if (!setup) return;
+
+  const {
+    ctx,
+    width,
+    height
+  } = setup;
+
+
+  ctx.clearRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+
+  const wins =
+    trades.filter(
+      t => t.result === "Win"
+    ).length;
+
+  const losses =
+    trades.filter(
+      t => t.result === "Loss"
+    ).length;
+
+  const be =
+    trades.filter(
+      t => t.result === "Break Even"
+    ).length;
+
+
+  const total =
+    wins + losses + be;
+
+
+  if (!total) {
+
+    ctx.fillStyle = "#8c929e";
+
+    ctx.font = "13px Arial";
+
+    ctx.textAlign = "center";
+
+    ctx.fillText(
+      "No result data",
+      width/2,
+      height/2
+    );
+
+    return;
+
+  }
+
+
+  const values =
+    [wins,losses,be];
+
+  const labels =
+    ["Wins","Losses","Break Even"];
+
+
+  const max =
+    Math.max(...values,1);
+
+  const chartWidth =
+    width - 40;
+
+  const barWidth =
+    chartWidth / 3 - 20;
+
+
+  values.forEach((value,index) => {
+
+    const x =
+      20 +
+      index *
+      (chartWidth/3) +
+      10;
+
+    const barHeight =
+      (value/max) *
+      220;
+
+    const y =
+      245 - barHeight;
+
+
+    ctx.fillStyle =
+      index === 0
+        ? "#36d399"
+        : index === 1
+          ? "#ff5c70"
+          : "#8c929e";
+
+
+    ctx.fillRect(
+      x,
+      y,
+      barWidth,
+      barHeight
+    );
+
+
+    ctx.fillStyle =
+      "#f3f4f6";
+
+    ctx.font =
+      "11px Arial";
+
+    ctx.textAlign =
+      "center";
+
+    ctx.fillText(
+      String(value),
+      x + barWidth/2,
+      y - 7
+    );
+
+
+    ctx.fillStyle =
+      "#8c929e";
+
+    ctx.fillText(
+      labels[index],
+      x + barWidth/2,
+      270
+    );
+
+  });
+
+}
+
+
+/* =========================================================
+   CSV EXPORT
+   ========================================================= */
+
+$("exportCsvBtn").addEventListener(
+  "click",
+  exportCSV
+);
+
+
+function csvEscape(value) {
+
+  const text =
+    String(value ?? "");
+
+  return `"${text.replaceAll('"','""')}"`;
+
+}
+
+
+function exportCSV() {
+
+  if (!state.trades.length) {
+
+    alert("There are no trades to export.");
+
+    return;
+
+  }
+
+
+  const headers = [
+
+    "Trade ID",
+    "Date",
+    "Pair",
+    "Trading Type",
+    "Direction",
+    "Strategy",
+    "Session",
+    "Market Bias",
+    "Entry",
+    "SL",
+    "TP",
+    "RR",
+    "Risk Amount",
+    "Lot Size",
+    "Result",
+    "P/L",
+    "Confidence",
+    "Emotion",
+    "Mistake",
+    "Notes"
+
+  ];
+
+
+  const rows =
+    state.trades.map(trade => [
+
+      trade.tradeId,
+      trade.date,
+      trade.pair,
+      trade.tradingType,
+      trade.direction,
+      trade.strategy,
+      trade.session,
+      trade.bias,
+      trade.entry,
+      trade.sl,
+      trade.tp,
+      trade.rr,
+      trade.riskAmount,
+      trade.lotSize,
+      trade.result,
+      trade.profitLoss,
+      trade.confidence,
+      trade.emotion,
+      trade.mistake,
+      trade.notes
+
+    ]);
+
+
+  const csv =
+    [
+      headers,
+      ...rows
+    ]
+      .map(row =>
+        row.map(csvEscape).join(",")
+      )
+      .join("\n");
+
+
+  const blob =
+    new Blob(
+      [csv],
+      {
+        type:
+          "text/csv;charset=utf-8;"
+      }
+    );
+
+
+  const url =
+    URL.createObjectURL(blob);
+
+  const link =
+    document.createElement("a");
+
+  link.href = url;
+
+  link.download =
+    `ujr-fx-trades-${todayString()}.csv`;
+
+  link.click();
+
+  URL.revokeObjectURL(url);
+
+}
+
+
+/* =========================================================
+   RISK CALCULATOR
+   ========================================================= */
+
+[
+  "calcBalance",
+  "calcRiskPercent",
+  "calcEntry",
+  "calcSL",
+  "calcTP",
+  "calcDirection"
+].forEach(id => {
+
+  $(id).addEventListener(
+    "input",
+    calculateRisk
+  );
+
+  $(id).addEventListener(
+    "change",
+    calculateRisk
+  );
+
+});
+
+
+function calculateRisk() {
+
+  const balance =
+    num($("calcBalance").value);
+
+  const riskPercent =
+    num($("calcRiskPercent").value);
+
+  const entry =
+    num($("calcEntry").value);
+
+  const sl =
+    num($("calcSL").value);
+
+  const tp =
+    num($("calcTP").value);
+
+  const direction =
+    $("calcDirection").value;
+
+
+  const riskAmount =
+    balance *
+    riskPercent /
+    100;
+
+
+  let stopDistance = 0;
+  let rewardDistance = 0;
+
+
+  if (direction === "Buy") {
+
+    stopDistance =
+      entry - sl;
+
+    rewardDistance =
+      tp - entry;
+
+  } else {
+
+    stopDistance =
+      sl - entry;
+
+    rewardDistance =
+      entry - tp;
+
+  }
+
+
+  const rr =
+    stopDistance > 0 &&
+    rewardDistance > 0
+      ? rewardDistance /
+        stopDistance
+      : 0;
+
+
+  const lot =
+    stopDistance > 0
+      ? riskAmount /
+        (stopDistance * 100)
+      : 0;
+
+
+  $("calcRiskAmount").textContent =
+    money(riskAmount);
+
+  $("calcStopDistance").textContent =
+    stopDistance > 0
+      ? stopDistance.toFixed(2)
+      : "0";
+
+  $("calcRR").textContent =
+    rr > 0
+      ? `1:${rr.toFixed(2)}`
+      : "0.00";
+
+  $("calcLotSize").textContent =
+    lot > 0
+      ? lot.toFixed(2)
+      : "0.00";
+
+}
+
+
+calculateRisk();
+
+
+/* =========================================================
+   CALENDAR
+   ========================================================= */
+
+$("prevMonth").addEventListener(
+  "click",
+  () => {
+
+    state.calendarDate.setMonth(
+      state.calendarDate.getMonth() - 1
+    );
+
+    renderCalendar();
+
+  }
+);
+
+
+$("nextMonth").addEventListener(
+  "click",
+  () => {
+
+    state.calendarDate.setMonth(
+      state.calendarDate.getMonth() + 1
+    );
+
+    renderCalendar();
+
+  }
+);
+
+
+function renderCalendar() {
+
+  const year =
+    state.calendarDate.getFullYear();
+
+  const month =
+    state.calendarDate.getMonth();
+
+
+  $("calendarTitle").textContent =
+    new Date(
+      year,
+      month,
+      1
+    ).toLocaleDateString(
+      "en-US",
+      {
+        month:"long",
+        year:"numeric"
+      }
+    );
+
+
+  const firstDay =
+    new Date(
+      year,
+      month,
+      1
+    ).getDay();
+
+
+  const daysInMonth =
+    new Date(
+      year,
+      month + 1,
+      0
+    ).getDate();
+
+
+  const grid =
+    $("calendarGrid");
+
+  grid.innerHTML = "";
+
+
+  for (
+    let i=0;
+    i<firstDay;
+    i++
+  ) {
+
+    const empty =
+      document.createElement("div");
+
+    empty.className =
+      "calendar-day empty";
+
+    grid.appendChild(empty);
+
+  }
+
+
+  for (
+    let day=1;
+    day<=daysInMonth;
+    day++
+  ) {
+
+    const date =
+      `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+
+
+    const trades =
+      state.trades.filter(
+        t => t.date === date
+      );
+
+
+    const pl =
+      trades.reduce(
+        (sum,t) =>
+          sum + num(t.profitLoss),
+        0
+      );
+
+
+    const cell =
+      document.createElement("div");
+
+    cell.className =
+      "calendar-day";
+
+
+    if (date === todayString()) {
+
+      cell.classList.add("today");
+
+    }
+
+
+    cell.innerHTML = `
+
+      <div class="calendar-number">
+        ${day}
+      </div>
+
+      ${
+        trades.length
+          ? `
+            <div class="calendar-pl ${
+              pl >= 0
+                ? "pl-positive"
+                : "pl-negative"
+            }">
+              ${money(pl)}
+            </div>
+
+            <div class="calendar-trades">
+              ${trades.length} trade${trades.length === 1 ? "" : "s"}
+            </div>
+          `
+          : ""
+      }
+
+    `;
+
+
+    cell.addEventListener(
+      "click",
+      () => showCalendarDay(date)
+    );
+
+
+    grid.appendChild(cell);
+
   }
 
 }
+
+
+function showCalendarDay(date) {
+
+  state.selectedCalendarDate =
+    date;
+
+
+  const trades =
+    state.trades.filter(
+      t => t.date === date
+    );
+
+
+  $("selectedDayTrades").innerHTML =
+    trades.length
+      ? trades.map(trade => `
+
+          <div class="recent-trade">
+
+            <div class="recent-trade-left">
+
+              <strong>
+                ${escapeHTML(trade.pair)}
+                ·
+                ${escapeHTML(trade.direction)}
+              </strong>
+
+              <span>
+                ${escapeHTML(trade.strategy)}
+                ·
+                ${escapeHTML(trade.result)}
+              </span>
+
+            </div>
+
+            <strong class="${
+              trade.profitLoss >= 0
+                ? "pl-positive"
+                : "pl-negative"
+            }">
+
+              ${money(trade.profitLoss)}
+
+            </strong>
+
+          </div>
+
+        `).join("")
+      : `
+          <div style="color:var(--muted);padding:20px 0">
+            No trades on ${formatDate(date)}.
+          </div>
+        `;
+
+}
+
+
+/* =========================================================
+   SETTINGS
+   ========================================================= */
+
+async function loadSettings() {
+
+  if (!state.user) return;
+
+  try {
+
+    const reference =
+      doc(
+        db,
+        "users",
+        state.user.uid,
+        "settings",
+        "profile"
+      );
+
+
+    const snapshot =
+      await getDoc(reference);
+
+
+    if (snapshot.exists()) {
+
+      const data =
+        snapshot.data();
+
+
+      state.currency =
+        data.currency ||
+        "USD";
+
+      state.startingBalance =
+        num(
+          data.startingBalance
+        );
+
+    } else {
+
+      state.currency =
+        "USD";
+
+      state.startingBalance =
+        0;
+
+    }
+
+
+    $("startingBalance").value =
+      state.startingBalance;
+
+    $("currency").value =
+      state.currency;
+
+  } catch (error) {
+
+    console.error(
+      "Load settings error:",
+      error
+    );
+
+  }
+
+}
+
+
+$("saveSettingsBtn").addEventListener(
+  "click",
+  saveSettings
+);
+
+
+async function saveSettings() {
+
+  if (!state.user) return;
+
+  const startingBalance =
+    num(
+      $("startingBalance").value
+    );
+
+  const currency =
+    $("currency").value;
+
+
+  try {
+
+    await setDoc(
+      doc(
+        db,
+        "users",
+        state.user.uid,
+        "settings",
+        "profile"
+      ),
+      {
+        startingBalance,
+        currency,
+        updatedAt:
+          serverTimestamp()
+      },
+      {
+        merge: true
+      }
+    );
+
+
+    state.startingBalance =
+      startingBalance;
+
+    state.currency =
+      currency;
+
+
+    $("settingsMessage").textContent =
+      "Settings saved successfully.";
+
+    renderDashboard();
+    renderJournal();
+    renderAnalytics();
+    renderCalendar();
+
+
+    setTimeout(() => {
+
+      $("settingsMessage").textContent = "";
+
+    },3000);
+
+
+  } catch (error) {
+
+    console.error(
+      "Save settings error:",
+      error
+    );
+
+    $("settingsMessage").textContent =
+      error.message ||
+      "Could not save settings.";
+
+  }
+
+}
+
+
+/* =========================================================
+   WINDOW RESIZE
+   ========================================================= */
+
+let resizeTimer;
+
+window.addEventListener(
+  "resize",
+  () => {
+
+    clearTimeout(resizeTimer);
+
+    resizeTimer =
+      setTimeout(() => {
+
+        if (
+          state.currentPage ===
+          "dashboardPage"
+        ) {
+
+          drawEquityChart(
+            $("equityChart"),
+            state.trades
+          );
+
+        }
+
+        if (
+          state.currentPage ===
+          "analyticsPage"
+        ) {
+
+          const trades =
+            getAnalyticsTrades();
+
+          drawEquityChart(
+            $("analyticsEquityChart"),
+            trades
+          );
+
+          drawResultChart(
+            $("resultChart"),
+            trades
+          );
+
+        }
+
+      },150);
+
+  }
+);
+
+
+/* =========================================================
+   INITIAL
+   ========================================================= */
+
+$("tradeDate").value =
+  todayString();
+
+$("tradeId").value =
+  generateTradeId();
+
+console.log(
+  "UjR Fx Trading Journal loaded."
+);
