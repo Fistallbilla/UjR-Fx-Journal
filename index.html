@@ -1,154 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>UjR Fx — Trading Journal</title>
+  <title>UjR Fx Trading Journal</title>
 
-  <link rel="stylesheet" href="style.css">
+  <!-- Website logo / browser tab icon -->
+  <link rel="icon" type="image/png" href="logo.png" />
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
   <!-- ================= LOGIN ================= -->
-
   <div id="loginScreen" class="login-screen">
-
     <div class="login-card">
 
-      <img
-        src="logo.png"
-        class="login-logo"
-        alt="UjR Fx"
-      >
+      <img src="logo.png" class="login-logo" alt="UjR Fx Logo"
+           onerror="this.style.display='none'">
 
-      <div class="login-brand">
-        <span>UjR</span> Fx
-      </div>
+      <div class="login-brand">UjR Fx</div>
+      <h1>Trading Journal</h1>
+      <p>Track. Analyze. Improve.</p>
 
-      <p class="login-subtitle">
-        Trading Journal
-      </p>
-
-      <button
-        id="googleLoginBtn"
-        class="google-btn"
-        type="button"
-      >
-        <span class="google-icon">G</span>
+      <button id="googleLoginBtn" class="google-btn">
+        <span>G</span>
         Continue with Google
       </button>
 
-      <div
-        id="loginError"
-        class="error"
-      ></div>
-
+      <div id="loginError" class="error-text"></div>
     </div>
-
   </div>
 
 
   <!-- ================= APP ================= -->
+  <div id="app" class="app hidden">
 
-  <div
-    id="app"
-    class="app hidden"
-  >
-
-    <!-- MOBILE OVERLAY -->
-
-    <div
-      id="sidebarOverlay"
-      class="sidebar-overlay"
-    ></div>
-
-
-    <!-- ================= SIDEBAR ================= -->
-
-    <aside
-      id="sidebar"
-      class="sidebar"
-    >
+    <!-- SIDEBAR -->
+    <aside id="sidebar" class="sidebar">
 
       <div class="brand">
 
         <img
           src="logo.png"
-          class="brand-logo"
           alt="UjR Fx"
+          class="brand-logo"
+          onerror="this.style.display='none'"
         >
 
-        <div class="brand-text">
-          <strong>UjR Fx</strong>
-          <span>Trading Journal</span>
+        <div>
+          <div class="brand-name">UjR Fx</div>
+          <div class="brand-sub">Trading Journal</div>
         </div>
 
       </div>
 
 
-      <button
-        id="closeSidebar"
-        class="mobile-close"
-        type="button"
-      >
-        ×
-      </button>
+      <nav class="nav">
 
-
-      <nav class="navigation">
-
-        <button
-          class="nav-item active"
-          data-page="dashboard"
-          type="button"
-        >
+        <button class="nav-item active" data-page="dashboard">
           <span>⌂</span>
           Dashboard
         </button>
 
-        <button
-          class="nav-item"
-          data-page="journal"
-          type="button"
-        >
+        <button class="nav-item" data-page="journal">
           <span>▤</span>
           Journal
         </button>
 
-        <button
-          class="nav-item"
-          data-page="analytics"
-          type="button"
-        >
+        <button class="nav-item" data-page="analytics">
           <span>◈</span>
           Analytics
         </button>
 
-        <button
-          class="nav-item"
-          data-page="risk"
-          type="button"
-        >
-          <span>⌁</span>
+        <button class="nav-item" data-page="calculator">
+          <span>◎</span>
           Risk Calculator
         </button>
 
-        <button
-          class="nav-item"
-          data-page="calendar"
-          type="button"
-        >
-          <span>▦</span>
+        <button class="nav-item" data-page="calendar">
+          <span>▣</span>
           Calendar
         </button>
 
-        <button
-          class="nav-item"
-          data-page="settings"
-          type="button"
-        >
+        <button class="nav-item" data-page="settings">
           <span>⚙</span>
           Settings
         </button>
@@ -158,11 +95,15 @@
 
       <div class="sidebar-bottom">
 
-        <button
-          id="logoutBtn"
-          class="logout-btn"
-          type="button"
-        >
+        <div class="user-box">
+          <img id="userPhoto" src="" alt="">
+          <div class="user-info">
+            <strong id="userName">User</strong>
+            <span id="userEmail">---</span>
+          </div>
+        </div>
+
+        <button id="logoutBtn" class="logout-btn">
           Logout
         </button>
 
@@ -171,171 +112,91 @@
     </aside>
 
 
-    <!-- ================= MAIN ================= -->
+    <!-- MOBILE OVERLAY -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
+
+    <!-- MAIN -->
     <main class="main">
 
-      <!-- TOPBAR -->
+      <!-- MOBILE TOPBAR -->
+      <div class="mobile-topbar">
 
-      <header class="topbar">
-
-        <button
-          id="openSidebar"
-          class="menu-btn"
-          type="button"
-        >
+        <button id="menuBtn" class="icon-btn">
           ☰
         </button>
 
-
-        <div class="topbar-title">
-
-          <h2 id="pageTitle">
-            Dashboard
-          </h2>
-
-          <p>
-            Track. Review. Improve.
-          </p>
-
+        <div class="mobile-brand">
+          <img src="logo.png" alt="Logo">
+          <strong>UjR Fx</strong>
         </div>
 
-
-        <!-- SMALL PREMIUM ADD BUTTON -->
-
-        <button
-          id="quickAddBtn"
-          class="add-trade-btn"
-          type="button"
-        >
-          <span class="add-icon">＋</span>
-          <span class="add-text">Add Trade</span>
+        <button id="mobileAddTradeBtn" class="mobile-add-btn">
+          ＋
         </button>
 
-      </header>
+      </div>
 
 
       <!-- ================= DASHBOARD ================= -->
+      <section id="page-dashboard" class="page active">
 
-      <section
-        id="dashboardPage"
-        class="page active-page"
-      >
+        <div class="page-header">
+
+          <div>
+            <div class="eyebrow">Overview</div>
+            <h1>Trading Dashboard</h1>
+            <p>Keep your trading performance under control.</p>
+          </div>
+
+          <button class="add-trade-btn" id="dashboardAddBtn">
+            <span class="plus">＋</span>
+            <span class="label">Add Trade</span>
+          </button>
+
+        </div>
+
 
         <div class="stats-grid">
 
           <div class="stat-card">
-            <span>Balance</span>
-            <strong id="dashBalance">$0.00</strong>
-            <small>Current balance</small>
-          </div>
-
-          <div class="stat-card">
-            <span>Total P/L</span>
-            <strong id="totalProfit">$0.00</strong>
-            <small id="profitPercent">0%</small>
+            <span>Total Trades</span>
+            <strong id="statTrades">0</strong>
           </div>
 
           <div class="stat-card">
             <span>Win Rate</span>
-            <strong id="winRate">0%</strong>
-            <small id="winLossText">0W / 0L</small>
+            <strong id="statWinRate">0%</strong>
           </div>
 
           <div class="stat-card">
-            <span>Max Drawdown</span>
-            <strong id="maxDrawdown">$0.00</strong>
-            <small>Peak-to-trough</small>
+            <span>Total P/L</span>
+            <strong id="statPL">$0.00</strong>
           </div>
 
           <div class="stat-card">
             <span>Profit Factor</span>
-            <strong id="profitFactor">0.00</strong>
-            <small>Gross profit / loss</small>
+            <strong id="statPF">0.00</strong>
+          </div>
+
+          <div class="stat-card">
+            <span>Average R</span>
+            <strong id="statAvgR">0.00R</strong>
           </div>
 
           <div class="stat-card">
             <span>Expectancy</span>
-            <strong id="expectancy">$0.00</strong>
-            <small>Average per trade</small>
+            <strong id="statExpectancy">$0.00</strong>
           </div>
 
           <div class="stat-card">
-            <span>Average R:R</span>
-            <strong id="averageRR">0.00</strong>
-            <small>Planned RR</small>
+            <span>Wins</span>
+            <strong id="statWins">0</strong>
           </div>
 
           <div class="stat-card">
-            <span>Average Win</span>
-            <strong id="averageWin">$0.00</strong>
-            <small>Winning trades</small>
-          </div>
-
-          <div class="stat-card">
-            <span>Average Loss</span>
-            <strong id="averageLoss">$0.00</strong>
-            <small>Losing trades</small>
-          </div>
-
-        </div>
-
-
-        <div class="dashboard-grid">
-
-          <div class="panel equity-panel">
-
-            <div class="panel-header">
-
-              <div>
-                <h3>Equity Curve</h3>
-                <p>Account performance</p>
-              </div>
-
-              <strong id="equityProfit">
-                $0.00
-              </strong>
-
-            </div>
-
-            <canvas id="equityCanvas"></canvas>
-
-          </div>
-
-
-          <div class="panel streak-panel">
-
-            <div class="panel-header">
-
-              <div>
-                <h3>Streaks</h3>
-                <p>Current performance</p>
-              </div>
-
-            </div>
-
-            <div class="streak-main">
-
-              <strong id="currentStreak">
-                0
-              </strong>
-
-              <span id="currentStreakType">
-                No streak
-              </span>
-
-            </div>
-
-            <div class="streak-row">
-              <span>Best Win Streak</span>
-              <strong id="bestWinStreak">0</strong>
-            </div>
-
-            <div class="streak-row">
-              <span>Worst Loss Streak</span>
-              <strong id="worstLossStreak">0</strong>
-            </div>
-
+            <span>Losses</span>
+            <strong id="statLosses">0</strong>
           </div>
 
         </div>
@@ -344,34 +205,28 @@
         <div class="dashboard-grid">
 
           <div class="panel">
-
             <div class="panel-header">
-
               <div>
-                <h3>Recent Trades</h3>
-                <p>Your latest activity</p>
+                <h2>Equity Curve</h2>
+                <span>Account performance</span>
               </div>
-
             </div>
 
-            <div id="recentTrades"></div>
-
+            <div class="chart-wrap">
+              <canvas id="equityChart"></canvas>
+            </div>
           </div>
 
 
           <div class="panel">
-
             <div class="panel-header">
-
               <div>
-                <h3>Quick Insights</h3>
-                <p>Automatic journal analysis</p>
+                <h2>Recent Trades</h2>
+                <span>Latest journal entries</span>
               </div>
-
             </div>
 
-            <div id="quickInsights"></div>
-
+            <div id="recentTrades" class="recent-trades"></div>
           </div>
 
         </div>
@@ -380,147 +235,87 @@
 
 
       <!-- ================= JOURNAL ================= -->
+      <section id="page-journal" class="page">
 
-      <section
-        id="journalPage"
-        class="page"
-      >
-
-        <div class="page-actions">
+        <div class="page-header">
 
           <div>
-            <h3>Trade Journal</h3>
-            <p>Review every trade</p>
+            <div class="eyebrow">Journal</div>
+            <h1>Trade Journal</h1>
+            <p>Record every trade and review your decisions.</p>
           </div>
 
-          <button
-            id="journalAddBtn"
-            class="add-trade-btn"
-            type="button"
-          >
-            <span class="add-icon">＋</span>
-            <span class="add-text">Add Trade</span>
+          <button class="add-trade-btn" id="journalAddBtn">
+            <span class="plus">＋</span>
+            <span class="label">Add Trade</span>
           </button>
-
-        </div>
-
-
-        <div class="journal-stats">
-
-          <div>
-            <span>Trades</span>
-            <strong id="journalCount">0</strong>
-          </div>
-
-          <div>
-            <span>Wins</span>
-            <strong id="journalWins">0</strong>
-          </div>
-
-          <div>
-            <span>Losses</span>
-            <strong id="journalLosses">0</strong>
-          </div>
-
-          <div>
-            <span>Total P/L</span>
-            <strong id="journalPL">$0.00</strong>
-          </div>
 
         </div>
 
 
         <div class="panel">
 
-          <div class="journal-toolbar">
+          <div class="filters">
 
-            <input
-              id="tradeSearch"
-              type="search"
-              placeholder="Search trades..."
-            >
-
-            <select id="resultFilter">
-              <option value="all">All Results</option>
+            <select id="filterResult">
+              <option value="">All Results</option>
               <option value="Win">Win</option>
               <option value="Loss">Loss</option>
-              <option value="BE">Break Even</option>
+              <option value="Break Even">Break Even</option>
             </select>
 
-            <select id="directionFilter">
-              <option value="all">All Directions</option>
-              <option value="Buy">Buy</option>
-              <option value="Sell">Sell</option>
+            <select id="filterPair">
+              <option value="">All Pairs</option>
+              <option value="XAUUSD">XAUUSD</option>
+              <option value="EURUSD">EURUSD</option>
+              <option value="GBPUSD">GBPUSD</option>
+              <option value="USDJPY">USDJPY</option>
+              <option value="BTCUSD">BTCUSD</option>
+              <option value="Other">Other</option>
             </select>
 
-            <select id="setupFilter">
-              <option value="all">All Setups</option>
+            <select id="filterTradingType">
+              <option value="">All Trading Types</option>
+              <option value="Scalping">Scalping</option>
+              <option value="Intraday">Intraday</option>
+              <option value="Swing">Swing</option>
             </select>
 
-            <button
-              id="exportCSV"
-              class="secondary-btn"
-              type="button"
-            >
+            <input type="date" id="filterDate">
+
+            <button id="clearFilters" class="secondary-btn">
+              Clear
+            </button>
+
+            <button id="exportCsvBtn" class="secondary-btn">
               Export CSV
             </button>
 
           </div>
 
 
-          <div class="table-wrap">
+          <div class="table-container">
 
             <table>
 
               <thead>
-
                 <tr>
                   <th>Date</th>
                   <th>Pair</th>
                   <th>Type</th>
                   <th>Direction</th>
-                  <th>Setup</th>
+                  <th>Strategy</th>
                   <th>Entry</th>
-                  <th>SL</th>
-                  <th>TP</th>
-                  <th>R:R</th>
+                  <th>RR</th>
                   <th>Result</th>
                   <th>P/L</th>
                   <th>Action</th>
                 </tr>
-
               </thead>
 
-              <tbody id="tradeTableBody"></tbody>
+              <tbody id="journalTableBody"></tbody>
 
             </table>
-
-          </div>
-
-
-          <div
-            id="emptyTrades"
-            class="empty-state"
-          >
-
-            <div class="empty-icon">
-              ＋
-            </div>
-
-            <h3>No trades yet</h3>
-
-            <p>
-              Add your first demo trade to start tracking.
-            </p>
-
-            <button
-              id="emptyAddBtn"
-              class="add-trade-btn"
-              type="button"
-            >
-              <span class="add-icon">＋</span>
-              <span class="add-text">Add Trade</span>
-            </button>
 
           </div>
 
@@ -530,115 +325,67 @@
 
 
       <!-- ================= ANALYTICS ================= -->
+      <section id="page-analytics" class="page">
 
-      <section
-        id="analyticsPage"
-        class="page"
-      >
-
-        <div class="page-actions">
+        <div class="page-header">
 
           <div>
-            <h3>Analytics</h3>
-            <p>
-              Understand your trading performance
-            </p>
+            <div class="eyebrow">Performance</div>
+            <h1>Analytics</h1>
+            <p>Understand your trading behavior.</p>
           </div>
 
         </div>
 
 
-        <div class="analytics-controls panel">
+        <div class="analytics-controls">
 
-          <div>
-            <label>Period</label>
+          <select id="analyticsPeriod">
 
-            <select id="analyticsPeriod">
+            <option value="all">All Time</option>
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="month">This Month</option>
+            <option value="custom">Custom</option>
 
-              <option value="all">
-                All Time
-              </option>
+          </select>
 
-              <option value="7">
-                Last 7 Days
-              </option>
-
-              <option value="30">
-                Last 30 Days
-              </option>
-
-              <option value="month">
-                This Month
-              </option>
-
-              <option value="custom">
-                Custom
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <div
-            id="customAnalytics"
-            class="custom-date-fields hidden"
-          >
-
-            <div>
-              <label>From</label>
-              <input id="analyticsFrom" type="date">
-            </div>
-
-            <div>
-              <label>To</label>
-              <input id="analyticsTo" type="date">
-            </div>
-
-          </div>
-
-
-          <button
-            id="applyAnalytics"
-            class="secondary-btn"
-            type="button"
-          >
-            Apply
-          </button>
+          <input type="date" id="analyticsFrom">
+          <input type="date" id="analyticsTo">
 
         </div>
 
 
-        <div class="analytics-summary">
+        <div class="stats-grid analytics-stats">
 
-          <div class="analytics-metric">
+          <div class="stat-card">
             <span>Trades</span>
             <strong id="aTrades">0</strong>
           </div>
 
-          <div class="analytics-metric">
+          <div class="stat-card">
             <span>Win Rate</span>
             <strong id="aWinRate">0%</strong>
           </div>
 
-          <div class="analytics-metric">
+          <div class="stat-card">
             <span>P/L</span>
-            <strong id="aPL">$0.00</strong>
+            <strong id="aPL">$0</strong>
           </div>
 
-          <div class="analytics-metric">
+          <div class="stat-card">
+            <span>Profit Factor</span>
+            <strong id="aPF">0</strong>
+          </div>
+
+          <div class="stat-card">
             <span>Average R</span>
-            <strong id="aAvgR">0.00R</strong>
+            <strong id="aAvgR">0R</strong>
           </div>
 
-          <div class="analytics-metric">
-            <span>Avg Risk</span>
-            <strong id="aAvgRisk">$0.00</strong>
-          </div>
-
-          <div class="analytics-metric">
-            <span>Max Drawdown</span>
-            <strong id="aDrawdown">$0.00</strong>
+          <div class="stat-card">
+            <span>Average Risk</span>
+            <strong id="aAvgRisk">$0</strong>
           </div>
 
         </div>
@@ -647,79 +394,46 @@
         <div class="analytics-grid">
 
           <div class="panel">
-
             <div class="panel-header">
-              <h3>Setup Performance</h3>
+              <div>
+                <h2>By Trading Type</h2>
+              </div>
             </div>
 
-            <div id="setupAnalytics"></div>
-
+            <div id="tradingTypeAnalytics"></div>
           </div>
 
 
           <div class="panel">
-
             <div class="panel-header">
-              <h3>Buy vs Sell</h3>
+              <div>
+                <h2>By Strategy</h2>
+              </div>
             </div>
 
-            <div id="directionAnalytics"></div>
-
+            <div id="strategyAnalytics"></div>
           </div>
 
 
           <div class="panel">
-
             <div class="panel-header">
-              <h3>Trading Type</h3>
-            </div>
-
-            <div id="typeAnalytics"></div>
-
-          </div>
-
-
-          <div class="panel">
-
-            <div class="panel-header">
-              <h3>Session Performance</h3>
+              <div>
+                <h2>By Session</h2>
+              </div>
             </div>
 
             <div id="sessionAnalytics"></div>
-
           </div>
 
 
           <div class="panel">
-
             <div class="panel-header">
-              <h3>Psychology</h3>
+              <div>
+                <h2>By Direction</h2>
+              </div>
             </div>
 
-            <div id="psychologyAnalytics"></div>
-
-          </div>
-
-
-          <div class="panel">
-
-            <div class="panel-header">
-              <h3>Mistakes</h3>
-            </div>
-
-            <div id="mistakeAnalytics"></div>
-
-          </div>
-
-
-          <div class="panel analytics-wide">
-
-            <div class="panel-header">
-              <h3>Monthly Performance</h3>
-            </div>
-
-            <div id="monthlyAnalytics"></div>
-
+            <div id="directionAnalytics"></div>
           </div>
 
         </div>
@@ -727,130 +441,84 @@
       </section>
 
 
-      <!-- ================= RISK ================= -->
+      <!-- ================= CALCULATOR ================= -->
+      <section id="page-calculator" class="page">
 
-      <section
-        id="riskPage"
-        class="page"
-      >
-
-        <div class="page-actions">
+        <div class="page-header">
 
           <div>
-            <h3>Risk Calculator</h3>
-            <p>
-              Plan your demo trades before entering
-            </p>
+            <div class="eyebrow">Risk Management</div>
+            <h1>Risk Calculator</h1>
+            <p>Calculate your trade risk before entering.</p>
           </div>
 
         </div>
 
 
-        <div class="risk-layout">
+        <div class="calculator-grid">
 
           <div class="panel">
 
             <div class="form-grid">
 
-              <div class="field">
-                <label>Balance</label>
-                <input
-                  id="calcBalance"
-                  type="number"
-                  step="0.01"
-                >
-              </div>
+              <label>
+                Account Balance
+                <input id="calcBalance" type="number" step="0.01">
+              </label>
 
-              <div class="field">
-                <label>Risk %</label>
-                <input
-                  id="calcRisk"
-                  type="number"
-                  step="0.1"
-                  value="1"
-                >
-              </div>
+              <label>
+                Risk %
+                <input id="calcRiskPercent" type="number" step="0.1" value="1">
+              </label>
 
-              <div class="field">
-                <label>Entry</label>
-                <input
-                  id="calcEntry"
-                  type="number"
-                  step="0.001"
-                >
-              </div>
+              <label>
+                Entry
+                <input id="calcEntry" type="number" step="0.001">
+              </label>
 
-              <div class="field">
-                <label>Stop Loss</label>
-                <input
-                  id="calcSL"
-                  type="number"
-                  step="0.001"
-                >
-              </div>
+              <label>
+                Stop Loss
+                <input id="calcSL" type="number" step="0.001">
+              </label>
 
-              <div class="field">
-                <label>Take Profit</label>
-                <input
-                  id="calcTP"
-                  type="number"
-                  step="0.001"
-                >
-              </div>
+              <label>
+                Take Profit
+                <input id="calcTP" type="number" step="0.001">
+              </label>
 
-              <div class="field">
-                <label>Contract Size</label>
-                <input
-                  id="calcContract"
-                  type="number"
-                  value="100"
-                >
-              </div>
+              <label>
+                Direction
+                <select id="calcDirection">
+                  <option value="Buy">Buy</option>
+                  <option value="Sell">Sell</option>
+                </select>
+              </label>
 
             </div>
-
-
-            <button
-              id="calculateRisk"
-              class="primary-btn calculator-btn"
-              type="button"
-            >
-              Calculate Risk
-            </button>
 
           </div>
 
 
-          <div class="panel risk-results">
+          <div class="panel calculator-results">
 
-            <div>
+            <div class="calc-result">
               <span>Risk Amount</span>
-              <strong id="calcRiskAmount">$0.00</strong>
+              <strong id="calcRiskAmount">$0</strong>
             </div>
 
-            <div>
-              <span>SL Distance</span>
+            <div class="calc-result">
+              <span>Stop Distance</span>
               <strong id="calcDistance">0</strong>
             </div>
 
-            <div>
-              <span>R:R</span>
-              <strong id="calcRR">0.00</strong>
+            <div class="calc-result">
+              <span>Risk : Reward</span>
+              <strong id="calcRR">0</strong>
             </div>
 
-            <div>
-              <span>Suggested Lot</span>
-              <strong id="calcLot">0.00</strong>
-            </div>
-
-            <div>
-              <span>Potential Loss</span>
-              <strong id="calcLoss">$0.00</strong>
-            </div>
-
-            <div>
-              <span>Potential Profit</span>
-              <strong id="calcProfit">$0.00</strong>
+            <div class="calc-result">
+              <span>Estimated Lot</span>
+              <strong id="calcLot">0</strong>
             </div>
 
           </div>
@@ -861,66 +529,44 @@
 
 
       <!-- ================= CALENDAR ================= -->
+      <section id="page-calendar" class="page">
 
-      <section
-        id="calendarPage"
-        class="page"
-      >
-
-        <div class="page-actions">
+        <div class="page-header">
 
           <div>
-            <h3>Trading Calendar</h3>
-            <p>
-              See your daily trading results
-            </p>
+            <div class="eyebrow">History</div>
+            <h1>Trading Calendar</h1>
+            <p>See your daily trading performance.</p>
           </div>
-
 
           <div class="calendar-controls">
 
-            <button
-              id="prevMonth"
-              class="secondary-btn"
-              type="button"
-            >
-              ‹
-            </button>
+            <button id="prevMonth" class="icon-btn">‹</button>
 
-            <strong id="calendarMonth"></strong>
+            <strong id="calendarTitle"></strong>
 
-            <button
-              id="nextMonth"
-              class="secondary-btn"
-              type="button"
-            >
-              ›
-            </button>
+            <button id="nextMonth" class="icon-btn">›</button>
 
           </div>
 
         </div>
 
 
-        <div class="panel calendar-panel">
+        <div class="panel">
 
           <div class="calendar-weekdays">
 
-            <span>Sun</span>
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-            <span>Sat</span>
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
 
           </div>
 
-
-          <div
-            id="calendarGrid"
-            class="calendar-grid"
-          ></div>
+          <div id="calendarGrid" class="calendar-grid"></div>
 
         </div>
 
@@ -928,19 +574,14 @@
 
 
       <!-- ================= SETTINGS ================= -->
+      <section id="page-settings" class="page">
 
-      <section
-        id="settingsPage"
-        class="page"
-      >
-
-        <div class="page-actions">
+        <div class="page-header">
 
           <div>
-            <h3>Settings</h3>
-            <p>
-              Account and journal settings
-            </p>
+            <div class="eyebrow">Preferences</div>
+            <h1>Settings</h1>
+            <p>Manage your journal settings.</p>
           </div>
 
         </div>
@@ -950,81 +591,50 @@
 
           <div class="panel">
 
-            <h3>Account</h3>
+            <h2>Account Settings</h2>
 
-            <div class="profile">
+            <div class="form-grid">
 
-              <img
-                id="settingsPhoto"
-                src="logo.png"
-                alt="Profile"
-              >
+              <label>
+                Starting Balance
+                <input id="startingBalance" type="number" step="0.01">
+              </label>
 
-              <div>
+              <label>
+                Currency
+                <select id="currency">
 
-                <strong id="settingsName">
-                  User
-                </strong>
+                  <option value="USD">USD</option>
+                  <option value="NPR">NPR</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
 
-                <span id="settingsEmail"></span>
-
-              </div>
+                </select>
+              </label>
 
             </div>
+
+            <button id="saveSettingsBtn" class="primary-btn">
+              Save Settings
+            </button>
+
+            <div id="settingsMessage" class="success-text"></div>
 
           </div>
 
 
           <div class="panel">
 
-            <h3>Trading Settings</h3>
+            <h2>About</h2>
 
-            <div class="field">
+            <p class="muted">
+              UjR Fx Trading Journal helps you record trades,
+              analyze performance and improve your trading discipline.
+            </p>
 
-              <label>
-                Starting Balance
-              </label>
-
-              <input
-                id="startingBalance"
-                type="number"
-                step="0.01"
-              >
-
+            <div class="version">
+              UjR Fx Journal V2.0
             </div>
-
-
-            <div class="field">
-
-              <label>
-                Currency
-              </label>
-
-              <select id="currency">
-
-                <option value="USD">USD</option>
-                <option value="NPR">NPR</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-
-              </select>
-
-            </div>
-
-
-            <button
-              id="saveAccountBtn"
-              class="primary-btn"
-              type="button"
-            >
-              Save Settings
-            </button>
-
-
-            <div
-              id="accountMessage"
-              class="account-message"
-            ></div>
 
           </div>
 
@@ -1038,140 +648,99 @@
 
 
   <!-- ================= TRADE MODAL ================= -->
+  <div id="tradeModal" class="modal hidden">
 
-  <div
-    id="tradeModal"
-    class="modal"
-  >
+    <div class="modal-backdrop"></div>
 
     <div class="modal-card">
 
       <div class="modal-header">
 
         <div>
-
-          <div class="modal-kicker">
-            TRADE ENTRY
-          </div>
-
-          <h2 id="modalTitle">
-            Add Trade
-          </h2>
-
-          <p>
-            Record your trade details
-          </p>
-
+          <div class="eyebrow">Journal Entry</div>
+          <h2 id="modalTitle">Add Trade</h2>
         </div>
 
-
-        <button
-          id="closeModal"
-          class="modal-close"
-          type="button"
-        >
+        <button id="closeModalBtn" class="modal-close">
           ×
         </button>
 
       </div>
 
 
+      <div id="tradeError" class="error-box"></div>
+
+
       <form id="tradeForm">
-
-        <input
-          type="hidden"
-          id="tradeId"
-        >
-
-
-        <div class="form-section-title">
-          Basic Trade
-        </div>
-
 
         <div class="form-grid">
 
-          <div class="field">
-            <label>Date</label>
 
-            <input
-              id="tradeDate"
-              type="date"
-              required
-            >
-          </div>
+          <!-- TRADE ID -->
+          <label>
+            Trade ID
+            <input id="tradeId" type="text" readonly>
+          </label>
 
 
-          <div class="field">
-            <label>Time</label>
-
-            <input
-              id="tradeTime"
-              type="time"
-            >
-          </div>
+          <!-- DATE -->
+          <label>
+            Date
+            <input id="tradeDate" type="date" required>
+          </label>
 
 
-          <div class="field">
-            <label>Pair</label>
+          <!-- PAIR -->
+          <label>
+            Pair
+            <select id="pair" required>
 
-            <input
-              id="pair"
-              type="text"
-              value="XAUUSD"
-              placeholder="XAUUSD"
-            >
-          </div>
-
-
-          <div class="field">
-            <label>Trading Type</label>
-
-            <select
-              id="tradingType"
-              required
-            >
-              <option value="Scalping">
-                Scalping
-              </option>
-
-              <option value="Intraday">
-                Intraday
-              </option>
-
-              <option value="Swing">
-                Swing
-              </option>
+              <option value="">Select Pair</option>
+              <option value="XAUUSD">XAUUSD</option>
+              <option value="EURUSD">EURUSD</option>
+              <option value="GBPUSD">GBPUSD</option>
+              <option value="USDJPY">USDJPY</option>
+              <option value="BTCUSD">BTCUSD</option>
+              <option value="US30">US30</option>
+              <option value="NAS100">NAS100</option>
+              <option value="Other">Other</option>
 
             </select>
-          </div>
+          </label>
 
 
-          <div class="field">
-            <label>Direction</label>
+          <!-- TRADING TYPE -->
+          <label>
+            Trading Type
+            <select id="tradingType" required>
 
-            <select id="direction">
-
-              <option value="Buy">
-                Buy
-              </option>
-
-              <option value="Sell">
-                Sell
-              </option>
+              <option value="">Select Trading Type</option>
+              <option value="Scalping">Scalping</option>
+              <option value="Intraday">Intraday</option>
+              <option value="Swing">Swing</option>
 
             </select>
-          </div>
+          </label>
 
 
-          <div class="field">
-            <label>Strategy</label>
+          <!-- DIRECTION -->
+          <label>
+            Direction
+            <select id="direction" required>
 
-            <select id="setup">
+              <option value="Buy">Buy</option>
+              <option value="Sell">Sell</option>
 
-              <option value="">
-                Select strategy
-              </option>
+            </select>
+          </label>
+
+
+          <!-- STRATEGY -->
+          <label>
+            Strategy
+            <select id="strategy" required>
+
+              <option value="">Select Strategy</option>
 
               <option value="Liquidity Sweep">
                 Liquidity Sweep
@@ -1182,15 +751,15 @@
               </option>
 
               <option value="FVG">
-                FVG
+                Fair Value Gap
               </option>
 
               <option value="BOS">
-                BOS
+                Break of Structure
               </option>
 
               <option value="CHoCH">
-                CHoCH
+                Change of Character
               </option>
 
               <option value="Breakout">
@@ -1202,7 +771,7 @@
               </option>
 
               <option value="Previous High/Low">
-                Previous High/Low
+                Previous High / Low
               </option>
 
               <option value="Other">
@@ -1210,102 +779,87 @@
               </option>
 
             </select>
-          </div>
-
-        </div>
+          </label>
 
 
-        <div class="form-section-title">
-          Price & Risk
-        </div>
+          <!-- SESSION -->
+          <label>
+            Session
+            <select id="session">
+
+              <option value="">Select Session</option>
+              <option value="Asian">Asian</option>
+              <option value="London">London</option>
+              <option value="New York">New York</option>
+              <option value="London + New York">London + New York</option>
+
+            </select>
+          </label>
 
 
-        <div class="form-grid">
+          <!-- BIAS -->
+          <label>
+            Market Bias
+            <select id="bias">
 
-          <div class="field">
-            <label>Entry</label>
+              <option value="">Select Bias</option>
+              <option value="Bullish">Bullish</option>
+              <option value="Bearish">Bearish</option>
+              <option value="Neutral">Neutral</option>
 
+            </select>
+          </label>
+
+
+          <!-- ENTRY -->
+          <label>
+            Entry
             <input
               id="entry"
               type="number"
               step="0.001"
+              placeholder="Entry price"
               required
-              inputmode="decimal"
             >
-          </div>
+          </label>
 
 
-          <div class="field">
-            <label>Stop Loss</label>
-
+          <!-- SL -->
+          <label>
+            Stop Loss
             <input
               id="sl"
               type="number"
               step="0.001"
+              placeholder="Stop loss"
               required
-              inputmode="decimal"
             >
-          </div>
+          </label>
 
 
-          <div class="field">
-            <label>Take Profit</label>
-
+          <!-- TP -->
+          <label>
+            Take Profit
             <input
               id="tp"
               type="number"
               step="0.001"
+              placeholder="Take profit"
               required
-              inputmode="decimal"
             >
-          </div>
+          </label>
 
 
-          <div class="field">
-
-            <label>
-              R:R
-              <span class="auto-label">
-                AUTO
-              </span>
-            </label>
-
-            <input
-              id="rr"
-              type="text"
-              placeholder="Auto"
-              readonly
-            >
-
-          </div>
+          <!-- RR -->
+          <label>
+            Risk : Reward
+            <input id="rr" type="text" readonly>
+          </label>
 
 
-          <div class="field">
-
-            <label>
-              Risk %
-            </label>
-
-            <input
-              id="riskPercent"
-              type="number"
-              step="0.1"
-              value="1"
-              inputmode="decimal"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Risk Amount
-              <span class="manual-label">
-                MANUAL
-              </span>
-            </label>
-
+          <!-- RISK AMOUNT -->
+          <label>
+            Risk Amount
             <input
               id="riskAmount"
               type="number"
@@ -1313,166 +867,41 @@
               min="0"
               placeholder="Enter risk amount"
               inputmode="decimal"
+              required
             >
+          </label>
 
-          </div>
 
-
-          <div class="field">
-
-            <label>
-              Lot Size
-            </label>
-
+          <!-- LOT -->
+          <label>
+            Lot Size
             <input
               id="lotSize"
               type="number"
               step="0.01"
               min="0"
               placeholder="Optional"
-              inputmode="decimal"
             >
-
-          </div>
-
-        </div>
+          </label>
 
 
-        <div class="form-section-title">
-          Trade Context
-        </div>
+          <!-- RESULT -->
+          <label>
+            Result
+            <select id="result" required>
 
-
-        <div class="form-grid">
-
-          <div class="field">
-
-            <label>
-              Session
-            </label>
-
-            <select id="session">
-
-              <option value="">
-                Select
-              </option>
-
-              <option value="Asia">
-                Asia
-              </option>
-
-              <option value="London">
-                London
-              </option>
-
-              <option value="New York">
-                New York
-              </option>
+              <option value="">Select Result</option>
+              <option value="Win">Win</option>
+              <option value="Loss">Loss</option>
+              <option value="Break Even">Break Even</option>
 
             </select>
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              HTF Bias
-            </label>
-
-            <select id="htfBias">
-
-              <option value="">
-                Select
-              </option>
-
-              <option value="Bullish">
-                Bullish
-              </option>
-
-              <option value="Bearish">
-                Bearish
-              </option>
-
-              <option value="Neutral">
-                Neutral
-              </option>
-
-            </select>
-
-          </div>
+          </label>
 
 
-          <div class="field">
-
-            <label>
-              Liquidity
-            </label>
-
-            <input
-              id="liquidity"
-              type="text"
-              placeholder="Previous high / low..."
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Confirmation
-            </label>
-
-            <input
-              id="confirmation"
-              type="text"
-              placeholder="BOS / CHoCH..."
-            >
-
-          </div>
-
-        </div>
-
-
-        <div class="form-section-title">
-          Result
-        </div>
-
-
-        <div class="result-entry-grid">
-
-          <div class="result-box">
-
-            <label>
-              Result
-            </label>
-
-            <select id="result">
-
-              <option value="Win">
-                Win
-              </option>
-
-              <option value="Loss">
-                Loss
-              </option>
-
-              <option value="BE">
-                Break Even
-              </option>
-
-            </select>
-
-          </div>
-
-
-          <div class="result-box">
-
-            <label>
-              Profit / Loss
-            </label>
-
+          <!-- P/L -->
+          <label>
+            Profit / Loss
             <input
               id="profitLoss"
               type="number"
@@ -1481,112 +910,64 @@
               inputmode="decimal"
               required
             >
-
-          </div>
-
-        </div>
-
-
-        <div class="pl-hint">
-          Win = positive &nbsp;•&nbsp;
-          Loss = negative &nbsp;•&nbsp;
-          Break Even = 0
-        </div>
-
-
-        <div class="form-section-title">
-          Review
-        </div>
-
-
-        <div class="form-grid">
-
-          <div class="field">
-
-            <label>
-              Psychology
-            </label>
-
-            <input
-              id="psychology"
-              type="text"
-              placeholder="Calm, confident..."
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Confidence
-            </label>
-
-            <input
-              id="confidence"
-              type="number"
-              min="1"
-              max="10"
-              placeholder="1 - 10"
-            >
-
-          </div>
-
-
-          <div class="field">
-
-            <label>
-              Mistake
-            </label>
-
-            <input
-              id="mistake"
-              type="text"
-              placeholder="No mistake / revenge..."
-            >
-
-          </div>
-
-        </div>
-
-
-        <div class="field">
-
-          <label>
-            Notes
           </label>
 
-          <textarea
-            id="notes"
-            rows="4"
-            placeholder="What happened in this trade?"
-          ></textarea>
+
+          <!-- CONFIDENCE -->
+          <label>
+            Confidence
+            <select id="confidence">
+
+              <option value="">Select Confidence</option>
+              <option value="1">1 / 5</option>
+              <option value="2">2 / 5</option>
+              <option value="3">3 / 5</option>
+              <option value="4">4 / 5</option>
+              <option value="5">5 / 5</option>
+
+            </select>
+          </label>
+
+
+          <!-- EMOTION -->
+          <label>
+            Emotion
+            <select id="emotion">
+
+              <option value="">Select Emotion</option>
+              <option value="Calm">Calm</option>
+              <option value="Confident">Confident</option>
+              <option value="Fearful">Fearful</option>
+              <option value="Greedy">Greedy</option>
+              <option value="FOMO">FOMO</option>
+              <option value="Revenge">Revenge</option>
+              <option value="Neutral">Neutral</option>
+
+            </select>
+          </label>
+
+
+          <!-- NOTES -->
+          <label class="full">
+            Trade Notes
+            <textarea
+              id="notes"
+              rows="4"
+              placeholder="What happened? What did you learn?"
+            ></textarea>
+          </label>
+
 
         </div>
-
-
-        <div
-          id="tradeError"
-          class="trade-error"
-        ></div>
 
 
         <div class="modal-actions">
 
-          <button
-            type="button"
-            id="cancelTrade"
-            class="secondary-btn"
-          >
+          <button type="button" id="cancelTradeBtn" class="secondary-btn">
             Cancel
           </button>
 
-
-          <button
-            type="submit"
-            class="save-trade-btn"
-          >
-            <span>✓</span>
+          <button type="submit" class="primary-btn">
             Save Trade
           </button>
 
@@ -1599,18 +980,8 @@
   </div>
 
 
-  <!-- TOAST -->
-
-  <div
-    id="toast"
-    class="toast"
-  ></div>
-
-
-  <script
-    type="module"
-    src="script.js"
-  ></script>
+  <!-- Firebase / App -->
+  <script type="module" src="app.js"></script>
 
 </body>
 </html>
